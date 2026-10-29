@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control de equipos · Bodega 963 · Bg360</title>
+<style>
+:root{
+  --bg:#0f1923;--panel:#111c26;--card:#131f2b;--card2:#0c151e;--line:#1e2d3d;--hover:#162030;
+  --txt:#e0e0e0;--mut:#8a9db0;--mut2:#6b7f8e;--dim:#4a6070;
+  --acc:#00d4a8;--acc-bg:rgba(0,212,168,.12);
+  --ok:#22c55e;--ok-bg:rgba(34,197,94,.13);
+  --warn:#f5a623;--warn-bg:rgba(245,166,35,.13);
+  --err:#ef4444;--err-bg:rgba(239,68,68,.13);
+  --info:#3b9eff;--info-bg:rgba(59,158,255,.13);
+  --vio:#a78bfa;--vio-bg:rgba(167,139,250,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:13px;color:var(--txt);background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+a{color:var(--acc);cursor:pointer;text-decoration:none}
+a:hover{text-decoration:underline}
+.ic{width:15px;height:15px;flex:none}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px}
+.mut{color:var(--mut2)}
+.dash{color:var(--dim)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#223446;border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- shell ---------- */
+.erp-shell{display:flex;height:100vh}
+.sidebar{width:180px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.logo{padding:14px 16px 12px;border-bottom:1px solid var(--line)}
+.logo b{font-size:17px;color:#fff;letter-spacing:.2px}
+.logo b span{color:var(--acc)}
+.logo small{display:block;font-size:10px;color:var(--dim);margin-top:2px}
+.nav{flex:1;overflow-y:auto;padding:6px 0}
+.nav-sec{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);padding:14px 16px 6px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12.5px;color:var(--mut);cursor:pointer;border-left:2px solid transparent}
+.nav-item:hover{background:var(--hover)}
+.nav-item.active{background:var(--hover);color:var(--acc);border-left-color:var(--acc)}
+.side-foot{border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;align-items:center}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--acc);color:#0f1923;font-weight:700;font-size:11px;display:grid;place-items:center;flex:none}
+.side-foot .nm{font-size:11.5px;line-height:1.25}
+.side-foot .rl{font-size:10px;color:var(--dim)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:42px;flex:none;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:stretch;padding:0 14px;gap:2px}
+.tab{display:flex;align-items:center;gap:7px;padding:0 12px;font-size:12px;color:var(--mut2);cursor:pointer;border-bottom:2px solid transparent;user-select:none;margin-bottom:-1px}
+.tab:hover{color:var(--txt)}
+.tab.active{color:var(--txt);border-bottom-color:var(--acc)}
+.tab .cnt{background:var(--warn-bg);color:var(--warn);font-size:10px;font-weight:700;padding:1px 6px;border-radius:9px}
+.crumb{margin-left:auto;align-self:center;font-size:11px;color:var(--dim)}
+.crumb b{color:var(--mut);font-weight:500}
+.content{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 18px 10px;gap:10px}
+
+/* ---------- page head ---------- */
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.ph h1{font-size:17px;font-weight:600;color:#fff}
+.ph p{font-size:12px;color:var(--mut2);margin-top:3px}
+.ph-act{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:6px;border:1px solid var(--line);background:var(--card);font-size:12px;color:var(--txt);white-space:nowrap}
+.btn:hover{border-color:#2b4157;background:var(--hover)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#06231d;font-weight:600}
+.btn.primary:hover{background:#00e6b6}
+.btn.ghost{background:none}
+.btn.sm{height:26px;padding:0 9px;font-size:11.5px}
+.btn.ok{border-color:rgba(34,197,94,.4);color:var(--ok)}
+.btn.ok:hover{background:var(--ok-bg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.ib{width:26px;height:26px;display:inline-grid;place-items:center;border-radius:6px;color:var(--mut)}
+.ib:hover{background:var(--hover);color:var(--acc)}
+
+/* ---------- chips ---------- */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 11px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:12px;color:var(--mut)}
+.chip b{font-size:11px;color:var(--txt);background:#1a2a3a;padding:1px 7px;border-radius:9px}
+.chip:hover{border-color:#2b4157}
+.chip.on{border-color:var(--acc);color:var(--acc);background:var(--acc-bg)}
+.chip .dot{width:7px;height:7px;border-radius:50%}
+.chip-sep{width:1px;background:var(--line);margin:4px 4px}
+
+/* ---------- filters ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+.flt{display:flex;flex-direction:column;gap:3px;min-width:118px}
+.flt.grow{flex:1;min-width:220px}
+.flt>span{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim)}
+.inp,.flt select,.flt input{height:28px;background:var(--card2);border:1px solid var(--line);border-radius:6px;color:var(--txt);font:inherit;font-size:12px;padding:0 8px;outline:none;width:100%}
+.inp:focus,.flt select:focus,.flt input:focus{border-color:var(--acc)}
+input[type=date]{color-scheme:dark}
+textarea.inp{height:auto;min-height:56px;padding:6px 8px;resize:vertical}
+.inp:disabled{opacity:.6}
+.srch{position:relative}
+.srch .ic{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--dim);width:14px;height:14px}
+.srch input{padding-left:28px}
+.srch.big input{height:32px}
+
+/* ---------- tables ---------- */
+.tw{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+th{position:sticky;top:0;z-index:3;background:#142130;color:var(--mut2);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:12px;background:var(--card)}
+th.stk{z-index:4}
+td.stk{position:sticky;z-index:1}
+th.stk,td.stk{overflow:hidden;text-overflow:ellipsis}
+.stk-l{box-shadow:inset -1px 0 0 #26394c,6px 0 8px -6px rgba(0,0,0,.6)}
+tbody tr{cursor:pointer}
+tr.sel td{background:#122a2b}
+tbody tr:hover td{background:var(--hover)}
+td.r,th.r{text-align:right}
+td.desc{max-width:260px;overflow:hidden;text-overflow:ellipsis;color:var(--mut)}
+.dv{font-weight:600;font-size:11.5px}
+td.empty{text-align:center;color:var(--mut2);padding:40px;cursor:default}
+input[type=checkbox]{accent-color:var(--acc);width:14px;height:14px;cursor:pointer;vertical-align:middle}
+.tfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:30px;font-size:11.5px;color:var(--mut2)}
+.bulk{display:flex;align-items:center;gap:8px}
+.bulk b{color:var(--acc)}
+.pdays{font-weight:700}
+
+/* ---------- badges ---------- */
+.bd{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;white-space:nowrap;line-height:16px}
+.bd::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-ok{background:var(--ok-bg);color:var(--ok)}
+.b-warn{background:var(--warn-bg);color:var(--warn)}
+.b-err{background:var(--err-bg);color:var(--err)}
+.b-info{background:var(--info-bg);color:var(--info)}
+.b-acc{background:var(--acc-bg);color:var(--acc)}
+.b-vio{background:var(--vio-bg);color:var(--vio)}
+.b-mut{background:#1a2836;color:var(--mut2)}
+.bd.plain::before{display:none}
+.sub{font-size:10.5px;color:var(--mut2);margin-left:5px}
+
+/* ---------- overlays ---------- */
+.ov{position:fixed;inset:0;background:rgba(3,8,12,.62);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.ov.open{display:flex}
+.ov-det{z-index:70}
+.modal{width:min(800px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.ov-det .modal{width:min(760px,96vw)}
+.mh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.mt{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;color:#fff}
+.mt .ic{color:var(--acc);width:17px;height:17px}
+.ms{font-size:11.5px;color:var(--mut2);margin-top:3px}
+.x{width:28px;height:28px;display:grid;place-items:center;border-radius:6px;color:var(--mut)}
+.x:hover{background:var(--hover);color:#fff}
+.mb{padding:4px 18px 18px;overflow-y:auto;flex:1}
+.mf{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 18px;border-top:1px solid var(--line);font-size:11.5px}
+.mf>div{display:flex;gap:8px}
+.fsec{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--acc);margin:18px 0 9px;display:flex;align-items:center;gap:8px}
+.fsec::after{content:"";flex:1;height:1px;background:var(--line)}
+.fsec .mut{text-transform:none;letter-spacing:0}
+.fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 14px}
+.fg.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.f.full{grid-column:1/-1}
+.f>label{display:block;font-size:11px;color:var(--mut);margin-bottom:4px}
+.f>label i{color:var(--err);font-style:normal}
+.f .help{font-size:10.5px;color:var(--dim);margin-top:4px}
+.f .err{font-size:10.5px;color:var(--err);margin-top:4px;display:none}
+.f.bad .err{display:block}
+.f.bad .inp{border-color:var(--err)}
+.f.bad .picker{border-color:var(--err)}
+.inrow{display:flex;gap:8px;align-items:center}
+.ck{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--mut);white-space:nowrap;cursor:pointer}
+.calc{font-size:11px;color:var(--mut2);margin-top:4px}
+.calc b{color:var(--txt)}
+#fbody:not([data-estado="NUEVO"]) [data-for="NUEVO"],#fbody[data-estado="NUEVO"] [data-for="USADO"],#fbody[data-ret] [data-hide-ret]{display:none}
+.rq{display:none;color:var(--err);font-style:normal}
+#fbody[data-estado="NUEVO"] .rq{display:inline}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--card2);flex-wrap:wrap}
+.seg button{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;font-size:12px;color:var(--mut);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button:hover:not(:disabled){color:var(--txt);background:var(--hover)}
+.seg button.on{background:var(--acc-bg);color:var(--acc);font-weight:600}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.seg.sm button{padding:5px 11px;font-size:11.5px}
+.hint{font-size:11.5px;color:var(--mut2);margin-top:8px;line-height:1.45}
+
+.alert{display:flex;gap:9px;align-items:flex-start;padding:9px 11px;border-radius:7px;font-size:12px;line-height:1.5;border:1px solid}
+.alert .ic{margin-top:2px}
+.alert.err{background:var(--err-bg);border-color:rgba(239,68,68,.35);color:#fca5a5}
+.alert.info{background:var(--info-bg);border-color:rgba(59,158,255,.35);color:#a9d1ff}
+.alert.warn{background:var(--warn-bg);border-color:rgba(245,166,35,.35);color:#fcd38a}
+.alert b{color:#fff}
+.alert .bd{vertical-align:1px}
+
+/* combo */
+.combo{position:relative}
+.combo-list{position:absolute;left:0;right:0;top:100%;margin-top:3px;max-height:210px;overflow:auto;background:var(--card2);border:1px solid #2b4157;border-radius:6px;z-index:10;display:none;box-shadow:0 10px 24px rgba(0,0,0,.45)}
+.combo.open .combo-list{display:block}
+.combo-opt{padding:6px 9px;cursor:pointer;font-size:12px}
+.combo-opt:hover,.combo-opt.hl{background:var(--hover);color:var(--acc)}
+.combo-empty{padding:8px 9px;font-size:11.5px;color:var(--mut2)}
+.combo::after{content:"";position:absolute;right:10px;top:12px;border:4px solid transparent;border-top-color:var(--dim);pointer-events:none}
+
+/* picker */
+.picker{border:1px solid var(--line);border-radius:7px;max-height:228px;overflow-y:auto;margin-top:8px;background:var(--card2)}
+.pk{display:grid;grid-template-columns:18px 140px 150px 92px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12px}
+.pk:last-child{border-bottom:0}
+.pk:hover{background:var(--hover)}
+.pk.on{background:#122a2b}
+.pk.dis{cursor:not-allowed;opacity:.55}
+.pk-d{font-weight:600;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-x{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-r{font-size:11px;color:var(--mut2);white-space:nowrap;text-align:right}
+.pk-more{padding:9px 10px;font-size:11.5px;color:var(--mut2);text-align:center}
+.chips-sel{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips-sel:empty{display:none}
+.cs{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 9px;border-radius:12px;background:var(--acc-bg);color:var(--acc);font-size:11.5px}
+.cs button{width:18px;height:18px;display:grid;place-items:center;border-radius:50%}
+.cs button:hover{background:rgba(0,212,168,.2)}
+.cs .ic{width:11px;height:11px}
+
+/* detail grid */
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.kv.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kv>div{background:var(--card);padding:8px 10px;min-width:0}
+.kv .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-bottom:3px}
+.kv .v{font-size:12px;word-break:break-word}
+.kv .wide{grid-column:1/-1}
+.kv .span2{grid-column:span 2}
+.audit{list-style:none;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.audit li{display:grid;grid-template-columns:20px 120px 140px 1fr;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px;background:var(--card)}
+.audit li:last-child{border-bottom:0}
+.audit .ic{color:var(--acc);width:14px;height:14px}
+.audit .t{color:var(--mut2);font-size:11.5px}
+.mini{list-style:none;margin-top:10px;border:1px solid var(--line);border-radius:7px;max-height:200px;overflow:auto}
+.mini li{padding:6px 10px;border-bottom:1px solid var(--line);font-size:11.5px;display:flex;gap:8px;align-items:center}
+.mini li:last-child{border-bottom:0}
+
+/* drawer */
+.drw-ov{position:fixed;inset:0;background:rgba(3,8,12,.45);z-index:59;display:none}
+.drw-ov.open{display:block}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(520px,96vw);background:var(--panel);border-left:1px solid var(--line);z-index:60;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-20px 0 50px rgba(0,0,0,.45)}
+.drawer.open{transform:none}
+.dh{display:flex;justify-content:space-between;gap:12px;padding:16px 18px 14px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--acc);margin-bottom:5px}
+.dh h2{font-size:16px;color:#fff;font-weight:600}
+.dh p{font-size:12px;color:var(--mut);margin-top:3px;line-height:1.4}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.db{flex:1;overflow-y:auto;padding:4px 18px 24px}
+.now{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);font-size:12px;line-height:1.5}
+.now .ic{width:18px;height:18px;margin-top:1px}
+.now.c-info .ic{color:var(--info)}
+.now.c-acc .ic{color:var(--acc)}
+.now.c-warn .ic{color:var(--warn)}
+.now.c-vio .ic{color:var(--vio)}
+.now b{color:#fff}
+.d-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tl{list-style:none;position:relative;margin-left:6px}
+.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl-i{position:relative;padding:0 0 12px 24px;cursor:pointer}
+.tl-dot{position:absolute;left:0;top:10px;width:12px;height:12px;border-radius:50%;border:2px solid var(--panel);background:var(--mut2)}
+.tl-i.c-info .tl-dot{background:var(--info)}
+.tl-i.c-acc .tl-dot{background:var(--acc)}
+.tl-i.c-warn .tl-dot{background:var(--warn)}
+.tl-i.c-vio .tl-dot{background:var(--vio)}
+.tl-b{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--card)}
+.tl-i:hover .tl-b{border-color:#2b4157;background:var(--hover)}
+.tl-i.first .tl-b{border-color:rgba(0,212,168,.35)}
+.tl-top{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.tl-d{font-size:11.5px;font-weight:600;color:#fff;margin-right:2px}
+.tl-t{font-size:12.5px;margin-top:6px}
+.tl-s{font-size:11.5px;color:var(--mut);margin-top:2px}
+.tl-a{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);margin-top:6px}
+.tl-a .ic{width:12px;height:12px}
+
+/* toasts */
+.toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:90}
+.toast{display:flex;gap:9px;align-items:center;min-width:260px;max-width:420px;padding:10px 13px;border-radius:8px;background:#162434;border:1px solid var(--line);border-left:3px solid var(--ok);font-size:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);animation:tin .2s ease}
+.toast.warn{border-left-color:var(--warn)}
+.toast.err{border-left-color:var(--err)}
+.toast .ic{color:var(--ok)}
+.toast.warn .ic{color:var(--warn)}
+@keyframes tin{from{transform:translateY(8px);opacity:0}}
+</style>
+</head>
+<body>
+<div class="erp-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar" id="topbar"></div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+<div class="ov" id="ov-form"><div class="modal"></div></div>
+<div class="drw-ov" id="drw-ov"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="ov ov-det" id="ov-det"><div class="modal"></div></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ================= utilidades ================= */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const isoD=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return isoD(d)};
+const fF=iso=>iso?`${iso.slice(8,10)}/${iso.slice(5,7)}/${iso.slice(0,4)}`:'';
+const fCOP=n=>n==null||n===''||isNaN(n)?'':'$'+Math.round(n).toLocaleString('es-CO');
+const dias=(a,b)=>Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);
+const nowTs=()=>{const d=new Date();return `${isoD(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const normK=s=>String(s||'').trim().toUpperCase().replace(/\s+/g,'');
+const DASH='<span class="dash">—</span>';
+const v=x=>x===''||x==null?DASH:esc(x);
+
+const USUARIO_ACTUAL='JEFERSON LOPEZ';
+const HOY=isoD(new Date());
+const MIN_FECHA='2023-01-01';
+const MAX_ENVIO=addDays(HOY,30);
+
+/* ================= iconos (SVG inline) ================= */
+const IC={
+  box:'<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
+  layers:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+  clip:'<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 3h6v3H9z"/>',
+  in:'<path d="M12 3v11M7 9l5 5 5-5"/><path d="M4 16v4h16v-4"/>',
+  out:'<path d="M12 14V3M7 8l5-5 5 5"/><path d="M4 16v4h16v-4"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  check:'<path d="M5 12l5 5 9-10"/>',
+  hist:'<path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  truck:'<path d="M2 6h12v10H2z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  warn:'<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v4M12 17h.01"/>',
+  back:'<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/>',
+  cart:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.5 12h11L21 7H6"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/>',
+  home:'<path d="M3 11l9-7 9 7v9H3z"/><path d="M9 20v-6h6v6"/>',
+  swap:'<path d="M7 7h13l-3-3M17 17H4l3 3"/>',
+  pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16v4z"/>',
+};
+const ic=(n,cls='')=>`<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[n]||''}</svg>`;
+
+/* ================= catálogos cerrados ================= */
+const DISPOSITIVOS=['ADAPTADOR 12V 1A','ADAPTADOR VIDEO BALUN','ADAPTADOR WIFI','ANTENA','ANTENA AC MESH','AP','AP UNIFI U6 LITE','CABLE HDMI','CAJON MONEDERO','CAMARA DE SEGURIDAD','CAMARA WEB','CELULAR','CONSUMIBLES','CONVERTIDOR DE FIBRA A ETHERNET','CONVERTIDOR HDMI A DISPLAYPORT','CPU','DATAFONO BOLD','DIADEMA IP','DIADEMA PLUG','DIADEMA USB','DISCO M2','DISCO MECANICO','DISCO SOLIDO','DVR DE 16 PUERTOS','DVR DE 8 PUERTOS','ESTABILIZADOR','ETHERNET SURGE PROTECTOR','FUENTE DE PODER','HDMI SPLITTER','HUELLERO','IMPRESORA ETIQUETA','IMPRESORA LASER','IMPRESORA POS','IMPRESORA TINTA','LECTOR DE BARRAS','MAC','MEMORIA RAM','MIKROTIK','MODEM','MODULOS DE FIBRA','MONITOR','MOUSE','MULTIPUERTOS USB 3.0','MULTITOMA','MULTITOMA RACK','NANO LOCO','NUC','PARLANTE DE TECHO','PLANTA DE SONIDO','POE','PORTATIL','ROUTER BOARD DE 10 PUERTOS','ROUTER BOARD DE 13 PUERTOS','ROUTER BOARD DE 7 PUERTOS','SONOS','SWITCH DE 16 PUERTOS','SWITCH DE 24 PUERTOS','SWITCH DE 48 PUERTOS','SWITCH DE 8 PUERTOS','TABLET','TARJETA DE VIDEO','TARJETA PCI EXPRESS','TECLADO','TELEFONO IP','TODO EN UNO','TV BOX','UNIFI U7 LITE','UPS'];
+const PROV=[
+  {n:'JUAN PABLO CARO MARTINEZ',nit:'1098615822'},
+  {n:'CAMARAS Y ALARMAS LAMSEG SAS',nit:'900534936'},
+  {n:'TIC AMERICA SAS',nit:'900456781'},
+  {n:'COLOMBIA SYSTEMS SAS',nit:'900016317'},
+  {n:'29.COM SAS',nit:'900331245'},
+  {n:'REDCOM TODO EN CONECTIVIDAD SAS',nit:'901286723'},
+  {n:'MULTITINTAS INK SAS',nit:'901378857'},
+  {n:'MERCADOLIBRE COLOMBIA LTDA',nit:'830067394'},
+  {n:'LESLY JOHANNA AMOROCHO ZARATE',nit:'1095923669'},
+  {n:'HIGH TEC COMPUTER',nit:'1098608715'},
+  {n:'AMOBILE BUCARAMANGA SAS',nit:'901112233'},
+  {n:'AUDIOVISUALES DE COLOMBIA SAS',nit:'900778812'},
+  {n:'GVS COLOMBIA SAS',nit:'900287450'},
+];
+const PROV_N=PROV.map(p=>p.n);
+const USUARIOS=['ANDREY TIRADO','ANGELICA BARBOSA','ANGIE CACERES','ARLEY PADILLA','DARIO HERNANDEZ','ERIAM MARIACA','ESNEYDER GELVEZ','GISETH MENDOZA','IVAN SANCHEZ','JEFERSON LOPEZ','JOSE GARNICA','JUAN GUEVARA','JULIAN GARCIA','JULIAN HERNANDEZ','LAURA BARRERA','LUZ OSMA','MAICOL CLARO','OSCAR SUAREZ','SERGIN LADINO','YELIZZA NAVARRO','YISLEY RUIZ','YULY FLOREZ'];
+const CCS=['963','1','8','12','13','14','15','18','19','20','43','100','301','304','309','411','412','413','414','420','421','490','552','700','712','750','821','822','831','895','966','970','990','TEMPORADA','TIENDAS CERRADAS'];
+const REPISAS=['0','1','2','3','4','5','6','7','8','9','10','11','12','CEDI','BOD 72','BODEGA 40','ARRIBA'];
+const SEGS=['INGRESO','SALIDA','CONTINGENCIA BOD 72','PRÉSTAMO','PRÉSTAMO BARRANCA'];
+const SEG_C={'INGRESO':'info','SALIDA':'acc','CONTINGENCIA BOD 72':'warn','PRÉSTAMO':'vio','PRÉSTAMO BARRANCA':'vio'};
+const SIT={BODEGA:{l:'En bodega',c:'info',col:'#3b9eff'},ENTREGADO:{l:'Entregado',c:'acc',col:'#00d4a8'},CONTINGENCIA:{l:'Contingencia BOD 72',c:'warn',col:'#f5a623'},PRESTAMO:{l:'En préstamo',c:'vio',col:'#a78bfa'}};
+const sitDeSeg=s=>s==='INGRESO'?'BODEGA':s==='SALIDA'?'ENTREGADO':s==='CONTINGENCIA BOD 72'?'CONTINGENCIA':'PRESTAMO';
+
+/* ================= badges ================= */
+const sitB=s=>`<span class="bd b-${SIT[s].c}">${SIT[s].l}</span>`;
+const segB=(s,o)=>`<span class="bd b-${SEG_C[s]}">${s}</span>${o==='RETORNO'?'<span class="sub">retorno</span>':''}`;
+const estB=s=>`<span class="bd plain ${s==='NUEVO'?'b-acc':'b-mut'}">${s}</span>`;
+const trasB=t=>t==='REALIZADO'?'<span class="bd b-ok">REALIZADO</span>':t==='NO REALIZADO'?'<span class="bd b-warn">NO REALIZADO</span>':'<span class="bd plain b-mut">No aplica</span>';
+const serialH=s=>s?`<span class="mono">${esc(s)}</span>`:'<span class="dash">Sin serial</span>';
+const alertH=(t,html)=>`<div class="alert ${t}">${ic(t==='err'?'warn':t==='warn'?'warn':'info')}<div>${html}</div></div>`;
+
+/* ================= datos en memoria ================= */
+let equipos=[],movs=[],nE=1,nM=1;
+const eqById=id=>equipos.find(e=>e.id===id);
+const movById=id=>movs.find(m=>m.id===id);
+const movsDe=id=>movs.filter(m=>m.equipoId===id).sort((a,b)=>b.id-a.id);
+
+function nuevoEquipo(o){
+  const e={id:nE++,dispositivo:o.dispositivo,descripcion:o.descripcion,serial:o.serial||'',activo:o.activo||'',estado:o.estado,
+    proveedor:o.proveedor||'',nit:o.nit||'',fechaFactura:o.fechaFactura||'',numFactura:o.numFactura||'',valor:o.valor??null,
+    fechaIngreso:'',repisa:'',situacion:'BODEGA',usuario:'',ccAsignado:'',fechaEnvio:'',ultMov:null};
+  e.cod='EQ-'+String(e.id).padStart(4,'0');
+  equipos.push(e);return e;
+}
+function registrarMov(e,m,opt={}){
+  const mv={id:nM++,equipoId:e.id,fecha:m.fecha,seguimiento:m.seguimiento,origen:m.origen||'',estado:'',repisa:'',
+    usuario:'',ccAsignado:'',fechaEnvio:'',traslado:m.traslado,audit:[]};
+  if(m.seguimiento==='INGRESO'){
+    if(m.origen==='RETORNO')e.estado='USADO';
+    mv.repisa=m.repisa;
+    Object.assign(e,{situacion:'BODEGA',fechaIngreso:m.fecha,repisa:m.repisa,usuario:'',ccAsignado:'',fechaEnvio:''});
+  }else{
+    Object.assign(mv,{repisa:e.repisa,usuario:m.usuario,ccAsignado:m.ccAsignado,fechaEnvio:m.fechaEnvio});
+    Object.assign(e,{situacion:sitDeSeg(m.seguimiento),usuario:m.usuario,ccAsignado:m.ccAsignado,fechaEnvio:m.fechaEnvio,repisa:''});
+  }
+  mv.estado=e.estado;
+  const tipo=m.origen==='RETORNO'?' (retorno a bodega)':'';
+  mv.audit.push({ts:opt.ts||nowTs(),por:opt.por||USUARIO_ACTUAL,acc:`Registró el movimiento ${m.seguimiento}${tipo}`,i:'edit'});
+  movs.push(mv);e.ultMov=mv.id;return mv;
+}
+function marcarTraslados(ids){
+  let n=0;
+  ids.forEach(id=>{const m=movById(id);if(m&&m.traslado==='NO REALIZADO'){m.traslado='REALIZADO';m.audit.push({ts:nowTs(),por:USUARIO_ACTUAL,acc:'Marcó el traslado como REALIZADO en el ERP',i:'check'});n++}});
+  ['inv','hist','tras'].forEach(k=>ui[k+'Sel'].clear());
+  return n;
+}
+
+/* ---- semilla: cada equipo con su secuencia de eventos ----
+   C = ingreso equipo NUEVO [fecha, repisa, proveedor, fechaFactura, numFactura, valor+IVA]
+   R = ingreso equipo USADO [fecha, repisa, traslado] (si el equipo ya existía, es un retorno)
+   S = salida/contingencia/préstamo [fecha, seguimiento, usuario, ccAsignado, fechaEnvio, traslado] */
+const cHue=['C','2026-09-23','9','JUAN PABLO CARO MARTINEZ','2026-09-22','HTFE-14611',288999];
+const cLec=['C','2025-06-10','11','TIC AMERICA SAS','2025-06-05','TA-88213',345100];
+const cPos=['C','2025-03-03','12','TIC AMERICA SAS','2025-02-27','TA-80110',690200];
+const cCam=['C','2026-03-03','0','CAMARAS Y ALARMAS LAMSEG SAS','2026-02-27','FELG-22410',145000];
+const cAda=['C','2026-01-15','9','CAMARAS Y ALARMAS LAMSEG SAS','2026-01-12','FELG-21890',12000];
+const cGen=v=>['C','2026-07-17','12','JUAN PABLO CARO MARTINEZ','2026-07-15','HTFE-14010',v];
+const cHon=['C','2026-09-18','9','LESLY JOHANNA AMOROCHO ZARATE','2026-09-18','FAC 106',399000];
+const cVt=['C','2025-12-22','8','COLOMBIA SYSTEMS SAS','2025-12-19','FE 4726',113050];
+const SEED=[
+  [['PORTATIL','HP - CORE I3 600U @2.00GHz · RAM 8GB · DISCO SOLIDO 120GB + CARGADOR','5CD822B1PQ','91234'],[
+    ['C','2025-03-14','10','JUAN PABLO CARO MARTINEZ','2025-03-10','HTFE-10422',2350000],
+    ['S','2025-03-20','SALIDA','SERGIN LADINO','414','2025-03-21','REALIZADO'],
+    ['R','2026-01-30','10','REALIZADO'],
+    ['S','2026-02-10','PRÉSTAMO BARRANCA','ARLEY PADILLA','12','2026-02-10','REALIZADO'],
+    ['R','2026-03-02','10','NO REALIZADO'],
+    ['S','2026-09-15','SALIDA','JULIAN GARCIA','20','2026-09-16','NO REALIZADO']]],
+  [['MONITOR','SAMSUNG 22" + CARGADOR','0B1EHCNN904072Y','53463'],[
+    ['C','2024-05-08','2','HIGH TEC COMPUTER','2024-05-03','FE 5512',620000],
+    ['S','2024-05-20','SALIDA','DARIO HERNANDEZ','990','2024-05-21','REALIZADO'],
+    ['R','2026-03-26','CEDI','REALIZADO'],
+    ['S','2026-09-20','SALIDA','SERGIN LADINO','895','2026-09-22','REALIZADO']]],
+  [['DVR DE 16 PUERTOS','HIKVISION 7200 SERIES + CARGADOR','FR4385851','95794'],[
+    ['C','2025-04-28','0','CAMARAS Y ALARMAS LAMSEG SAS','2025-04-24','FELG-21289',398000],
+    ['S','2026-01-06','SALIDA','DARIO HERNANDEZ','421','2026-01-16','REALIZADO'],
+    ['R','2026-09-09','0','NO REALIZADO']]],
+  [['SWITCH DE 8 PUERTOS','TP-LINK TL-SG108 GIGABIT','22381J5003311','96301'],[
+    ['C','2025-09-02','1','29.COM SAS','2025-08-29','FE-3321',98000],
+    ['S','2026-04-10','CONTINGENCIA BOD 72','JULIAN HERNANDEZ','990','2026-04-10','REALIZADO'],
+    ['R','2026-05-02','1','REALIZADO'],
+    ['S','2026-07-15','SALIDA','IVAN SANCHEZ','13','2026-07-16','NO REALIZADO']]],
+  [['TABLET','SAMSUNG GALAXY TAB A9 64GB','R9YW30ABCDE','97300'],[
+    ['C','2026-05-05','12','AMOBILE BUCARAMANGA SAS','2026-05-02','AMB-2291',699000],
+    ['S','2026-06-01','PRÉSTAMO','LAURA BARRERA','20','2026-06-01','REALIZADO'],
+    ['R','2026-06-20','12','REALIZADO']]],
+  [['LECTOR DE BARRAS','HONEYWELL VOYAGER 1250G USB','23011B4A21','96012'],[cLec,
+    ['S','2025-06-20','SALIDA','ANDREY TIRADO','411','2025-06-21','REALIZADO'],
+    ['R','2026-05-14','11','NO REALIZADO']]],
+  [['LECTOR DE BARRAS','HONEYWELL VOYAGER 1250G USB','23011B4A35','96013'],[cLec,['S','2026-02-11','SALIDA','ANDREY TIRADO','412','2026-02-12','NO REALIZADO']]],
+  [['UPS','ONLINE SAT MONOFASICA 1KVA','','97736'],[['C','2026-09-23','3','JUAN PABLO CARO MARTINEZ','2026-09-22','HTFE-14609',848999],['S','2026-09-24','SALIDA','MAICOL CLARO','821','2026-09-28','REALIZADO']]],
+  [['UPS','ONLINE 3000VA POWEST','','96969'],[['C','2025-12-18','3','JUAN PABLO CARO MARTINEZ','2025-12-15','HTFE-12648',2088899],['S','2026-01-08','SALIDA','LUZ OSMA','1','2026-01-08','REALIZADO']]],
+  [['MODEM','TENDA 4G06 300 WI-FI 4G VoLTE + CARGADOR','EA653010512000659','96546'],[['C','2026-01-07','1','REDCOM TODO EN CONECTIVIDAD SAS','2025-10-02','FERC 13309',279999]]],
+  [['MODEM','TENDA 4G06 300 WI-FI 4G VoLTE + CARGADOR','EA653010523000593','96658'],[['C','2026-01-07','1','REDCOM TODO EN CONECTIVIDAD SAS','2025-10-16','FERC 13732',280000],['S','2026-02-03','SALIDA','IVAN SANCHEZ','13','2026-02-04','NO REALIZADO']]],
+  [['CAMARA WEB','LOGITECH C922','2437LVC0S9R8','96952'],[['C','2025-12-15','9','JUAN PABLO CARO MARTINEZ','2025-12-11','HTFE-12633',285600],['S','2026-01-21','SALIDA','OSCAR SUAREZ','822','2026-01-27','NO REALIZADO']]],
+  [['CAMARA WEB','LOGITECH C922','2448LV516RN9','96911'],[['C','2025-12-05','9','MULTITINTAS INK SAS','2025-12-02','FE 52157',320000],['S','2026-01-21','SALIDA','MAICOL CLARO','552','2026-01-29','NO REALIZADO']]],
+  [['CAMARA WEB','KISONLI HD-1088 - MAL ENFOQUE','','93787'],[['R','2026-02-04','11','NO REALIZADO']]],
+  [['CELULAR','HONOR X6B 256/6 + CARGADOR · IMEI 868152072418874','AM7XCP5304405447','96970'],[['C','2025-12-20','9','MERCADOLIBRE COLOMBIA LTDA','2025-12-17','1P00257993',269022],['S','2026-01-21','SALIDA','ANDREY TIRADO','966','2026-01-23','REALIZADO']]],
+  [['CELULAR','SAMSUNG GALAXY A17 8GB - 256GB','RZGL202F2JX','97671'],[['C','2026-09-10','9','LESLY JOHANNA AMOROCHO ZARATE','2026-09-09','FAC 102',749000],['S','2026-09-22','SALIDA','ANGIE CACERES','309','2026-09-23','REALIZADO']]],
+  [['CELULAR','HONOR PLAY 10','ABXRNX6425003979','97676'],[cHon]],
+  [['CELULAR','HONOR PLAY 10','ABXRNX6425002556','97677'],[cHon,['S','2026-09-19','SALIDA','YISLEY RUIZ','712','2026-09-19','NO REALIZADO']]],
+  [['DIADEMA IP','VT2000 RJ09','VT2000210701846','96984'],[cVt,['S','2026-01-09','SALIDA','DARIO HERNANDEZ','309','2026-01-30','NO REALIZADO']]],
+  [['DIADEMA IP','VT2000 RJ09','VT2000210701851','96985'],[cVt]],
+  [['DIADEMA USB','SAT - FALTA ESPUMA','',''],[['R','2026-01-09','8','NO REALIZADO']]],
+  [['DIADEMA USB','JALTECH - FALTA ESPUMA','','94052'],[['R','2026-01-09','8','NO REALIZADO']]],
+  [['DIADEMA USB','GENIUS HS-230U','VW2624403997','97652'],[['C','2026-08-12','11','JUAN PABLO CARO MARTINEZ','2026-08-10','HTFE-14268',57999],['S','2026-09-24','SALIDA','YISLEY RUIZ','43','2026-09-24','NO REALIZADO']]],
+  [['HUELLERO','DIGITAL PERSONA 4500U','VA20E02447','97681'],[cHue,['S','2026-09-24','SALIDA','SERGIN LADINO','12','2026-09-24','REALIZADO']]],
+  [['HUELLERO','DIGITAL PERSONA 4500U','VA20E02448','97682'],[cHue,['S','2026-09-24','SALIDA','SERGIN LADINO','12','2026-09-24','NO REALIZADO']]],
+  [['HUELLERO','DIGITAL PERSONA 4500U','VA20E02449','97683'],[cHue]],
+  [['IMPRESORA POS','EPSON TM-T20III USB/ETHERNET','X4RV123456','95510'],[cPos,['S','2025-03-10','SALIDA','ESNEYDER GELVEZ','413','2025-03-11','REALIZADO']]],
+  [['IMPRESORA POS','EPSON TM-T20III USB/ETHERNET','X4RV123470','95511'],[cPos,['S','2026-08-04','CONTINGENCIA BOD 72','JULIAN HERNANDEZ','990','2026-08-04','NO REALIZADO']]],
+  [['SWITCH DE 24 PUERTOS','TP-LINK TL-SG1024D','2238100457','96410'],[['C','2026-06-12','ARRIBA','29.COM SAS','2026-06-10','FE-3410',389000]]],
+  [['MIKROTIK','hEX RB750Gr3','HCQ08V2KXA','96120'],[['C','2025-10-01','1','COLOMBIA SYSTEMS SAS','2025-09-29','FE 4120',285000],['S','2026-08-20','PRÉSTAMO','YELIZZA NAVARRO','750','2026-08-20','NO REALIZADO']]],
+  [['POE','TP-LINK TL-POE150S','','96121'],[['C','2025-10-01','1','COLOMBIA SYSTEMS SAS','2025-09-29','FE 4120',89000]]],
+  [['CAMARA DE SEGURIDAD','HIKVISION DOMO 2MP DS-2CE76D0T','J12345671','96701'],[cCam,['S','2026-03-10','SALIDA','ANDREY TIRADO','14','2026-03-12','NO REALIZADO']]],
+  [['CAMARA DE SEGURIDAD','HIKVISION DOMO 2MP DS-2CE76D0T','J12345672','96702'],[cCam,['S','2026-03-10','SALIDA','ANDREY TIRADO','14','2026-03-12','NO REALIZADO']]],
+  [['CAMARA DE SEGURIDAD','HIKVISION DOMO 2MP DS-2CE76D0T','J12345673','96703'],[cCam]],
+  [['ADAPTADOR 12V 1A','ADAPTADORES CAMARAS','',''],[cAda,['S','2026-01-21','SALIDA','ANDREY TIRADO','14','2026-01-23','NO REALIZADO']]],
+  [['ADAPTADOR 12V 1A','ADAPTADORES CAMARAS','',''],[cAda,['S','2026-01-21','SALIDA','SERGIN LADINO','12','2026-01-23','NO REALIZADO']]],
+  [['ADAPTADOR 12V 1A','ADAPTADORES CAMARAS','',''],[cAda,['S','2026-01-21','SALIDA','ANGELICA BARBOSA','19','2026-01-23','NO REALIZADO']]],
+  [['ADAPTADOR 12V 1A','ADAPTADORES CAMARAS','',''],[cAda]],
+  [['ADAPTADOR 12V 1A','ADAPTADORES CAMARAS','',''],[cAda]],
+  [['CPU','INTEL CORE I5 9G · RAM 8GB · DISCO 240GB','',''],[['R','2026-01-05','1','NO REALIZADO'],['S','2026-01-07','SALIDA','DARIO HERNANDEZ','420','2026-01-20','NO REALIZADO']]],
+  [['CPU','INTEL CORE I3 10G · RAM 8GB · SSD 240GB','MXL0123ABC','88431'],[['R','2026-08-12','1','NO REALIZADO']]],
+  [['MEMORIA RAM','KINGSTON DDR4 4GB SO-DIMM','KN4GB0704302606033ML00',''],[['R','2026-09-24','11','NO REALIZADO']]],
+  [['MEMORIA RAM','ADATA DDR4 8GB SO-DIMM','7L2509047272',''],[['C','2026-03-27','11','HIGH TEC COMPUTER','2026-03-20','FE 7820',98000],['S','2026-09-24','SALIDA','LAURA BARRERA','970','2026-09-24','NO REALIZADO']]],
+  [['DISCO MECANICO','3TB HITACHI','',''],[['R','2026-09-24','10','NO REALIZADO']]],
+  [['DISCO MECANICO','2TB TOSHIBA','',''],[['R','2026-09-24','10','NO REALIZADO']]],
+  [['DISCO SOLIDO','KINGSTON A400 480GB','50026B7785A1C2D3',''],[['C','2026-07-01','11','JUAN PABLO CARO MARTINEZ','2026-06-28','HTFE-13980',165000],['S','2026-07-09','SALIDA','ESNEYDER GELVEZ','700','2026-07-10','NO REALIZADO']]],
+  [['DISCO M2','KINGSTON NV2 500GB NVMe','50026B7686B3E4F5',''],[['C','2026-07-01','11','JUAN PABLO CARO MARTINEZ','2026-06-28','HTFE-13980',189000]]],
+  [['TECLADO','GENIUS KB-116 USB','ZM2C4R012345',''],[cGen(25000),['S','2026-08-05','SALIDA','ANDREY TIRADO','8','2026-08-05','NO REALIZADO']]],
+  [['MOUSE','GENIUS DX-110 USB','X21512700931',''],[cGen(18000),['S','2026-08-05','SALIDA','ANDREY TIRADO','8','2026-08-05','NO REALIZADO']]],
+  [['MOUSE','GENIUS DX-110 USB','X21512700932',''],[cGen(18000)]],
+  [['TELEFONO IP','GRANDSTREAM GXP1610','20EZ8K1A2B3','96550'],[['C','2026-02-02','3','COLOMBIA SYSTEMS SAS','2026-01-28','FE 4801',210000],['S','2026-02-15','SALIDA','JULIAN HERNANDEZ','18','2026-02-16','NO REALIZADO']]],
+  [['ESTABILIZADOR','FORZA FVR-1202 1000VA','','95220'],[['R','2026-04-18','CEDI','NO REALIZADO']]],
+  [['TODO EN UNO','LENOVO IDEACENTRE AIO 3 · I5 · 16GB · 512GB','PF4XYZ12','97410'],[['C','2026-06-20','BODEGA 40','TIC AMERICA SAS','2026-06-18','TA-91002',3250000],['S','2026-06-25','SALIDA','ARLEY PADILLA','15','2026-06-26','NO REALIZADO']]],
+  [['CONSUMIBLES','TONER HP 105A','',''],[['C','2026-09-01','ARRIBA','MULTITINTAS INK SAS','2026-08-28','FE 53310',89000]]],
+  [['MODULOS DE FIBRA','SFP 1.25G MONOMODO LC','',''],[['C','2026-02-20','1','COLOMBIA SYSTEMS SAS','2026-02-18','FE 4850',45000],['S','2026-03-01','SALIDA','IVAN SANCHEZ','990','2026-03-02','NO REALIZADO']]],
+  [['PORTATIL','LENOVO V15 G4 · I5 13G · 16GB · SSD 512GB + CARGADOR','PF5ABC77','97520'],[['C','2026-07-08','10','TIC AMERICA SAS','2026-07-06','TA-91540',2890000],['S','2026-07-14','PRÉSTAMO BARRANCA','MAICOL CLARO','12','2026-07-14','NO REALIZADO']]],
+];
+function seed(){
+  let k=0;
+  const ts=f=>{k++;return `${f} ${pad(7+(k*5)%10)}:${pad((k*17)%60)}`};
+  for(const [b,evs] of SEED){
+    let e=null;
+    for(const ev of evs){
+      let mv;
+      if(ev[0]==='C'){
+        const [,f,rep,prov,ff,nf,val]=ev;const p=PROV.find(x=>x.n===prov);
+        e=nuevoEquipo({dispositivo:b[0],descripcion:b[1],serial:b[2],activo:b[3],estado:'NUEVO',proveedor:p.n,nit:p.nit,fechaFactura:ff,numFactura:nf,valor:val});
+        mv=registrarMov(e,{fecha:f,seguimiento:'INGRESO',origen:'ALTA',repisa:rep,traslado:'NO APLICA'},{ts:ts(f)});
+      }else if(ev[0]==='R'){
+        const [,f,rep,tr]=ev;
+        const ret=!!e;
+        if(!e)e=nuevoEquipo({dispositivo:b[0],descripcion:b[1],serial:b[2],activo:b[3],estado:'USADO'});
+        mv=registrarMov(e,{fecha:f,seguimiento:'INGRESO',origen:ret?'RETORNO':'ALTA',repisa:rep,traslado:tr},{ts:ts(f)});
+      }else{
+        const [,f,seg,us,cc,fe,tr]=ev;
+        mv=registrarMov(e,{fecha:f,seguimiento:seg,usuario:us,ccAsignado:cc,fechaEnvio:fe,traslado:tr},{ts:ts(f)});
+      }
+      if(mv.traslado==='REALIZADO')mv.audit.push({ts:`${mv.fechaEnvio||mv.fecha} 16:${pad((k*7)%60)}`,por:USUARIO_ACTUAL,acc:'Marcó el traslado como REALIZADO en el ERP',i:'check'});
+    }
+  }
+}
+
+/* ================= estado de la UI ================= */
+const ui={
+  tab:'inv',drawer:null,
+  inv:{q:'',sit:'',disp:'',estado:'',repisa:'',usuario:'',cc:'',traslado:'',desde:'',hasta:''},
+  hist:{q:'',seg:'',disp:'',estado:'',usuario:'',cc:'',traslado:'',desde:'',hasta:''},
+  tras:{q:'',modo:'NO REALIZADO',seg:'',usuario:'',cc:''},
+  invSel:new Set(),histSel:new Set(),trasSel:new Set(),
+};
+const EMPTY={inv:{...ui.inv},hist:{...ui.hist},tras:{...ui.tras}};
+
+/* ================= shell ================= */
+function drawSidebar(){
+  $('#sidebar').innerHTML=`
+    <div class="logo"><b>Bg<span>360</span></b><small>ERP · Gestión de sistemas</small></div>
+    <nav class="nav">
+      <div class="nav-sec">Mesa de servicios</div>
+      <div class="nav-item">${ic('alert')}Incidentes / Todos</div>
+      <div class="nav-item">${ic('layers')}Masivos</div>
+      <div class="nav-item">${ic('clip')}Requerimientos</div>
+      <div class="nav-sec">Bodega 963</div>
+      <div class="nav-item active">${ic('box')}Control de equipos</div>
+    </nav>
+    <div class="side-foot"><div class="avatar">JL</div><div><div class="nm">${USUARIO_ACTUAL}</div><div class="rl">Bodega 963 · Sistemas</div></div></div>`;
+}
+function drawTop(){
+  const p=movs.filter(m=>m.traslado==='NO REALIZADO').length;
+  $('#topbar').innerHTML=[['inv','box','Equipos'],['hist','hist','Historial de movimientos'],['tras','truck','Traslados ERP',p]]
+    .map(([k,i,l,c])=>`<div class="tab ${ui.tab===k?'active':''}" data-tab="${k}">${ic(i)}${l}${c!=null?`<span class="cnt">${c}</span>`:''}</div>`).join('')
+    +`<div class="crumb">Bodega 963 · Sistemas / <b>Control de equipos</b></div>`;
+}
+const head=(t,s)=>`<div class="ph"><div><h1>${t}</h1><p>${s}</p></div><div class="ph-act">
+  <button class="btn primary" data-act="ingreso">${ic('in')}Registrar ingreso</button>
+  <button class="btn" data-act="salida">${ic('out')}Registrar salida</button></div></div>`;
+
+/* ================= filtros ================= */
+function fSel(sc,key,label,opts){
+  const val=ui[sc][key];
+  return `<label class="flt"><span>${label}</span><select data-scope="${sc}" data-f="${key}"><option value="">Todos</option>${opts.map(o=>{const [ov,ol]=Array.isArray(o)?o:[o,o];return `<option value="${esc(ov)}" ${val===ov?'selected':''}>${esc(ol)}</option>`}).join('')}</select></label>`;
+}
+const fDate=(sc,key,label)=>`<label class="flt"><span>${label}</span><input type="date" min="${MIN_FECHA}" data-scope="${sc}" data-f="${key}" value="${ui[sc][key]}"></label>`;
+const fSearch=(sc,ph)=>`<label class="flt grow"><span>Buscar</span><div class="srch">${ic('search')}<input type="text" data-scope="${sc}" data-f="q" placeholder="${ph}" value="${esc(ui[sc].q)}"></div></label>`;
+const TRAS_OPTS=[['REALIZADO','REALIZADO'],['NO REALIZADO','NO REALIZADO'],['NO APLICA','No aplica']];
+const dispsUsados=()=>[...new Set(equipos.map(e=>e.dispositivo))].sort();
+const clearBtn=sc=>`<button class="btn ghost sm" data-act="clear" data-scope="${sc}">Limpiar</button>`;
+const txtMatch=(e,q)=>!q||[e.serial,e.activo,e.descripcion,e.dispositivo,e.cod].some(x=>String(x).toLowerCase().includes(q));
+
+/* sticky cols */
+const stk=(left,w,last)=>`class="stk${last?' stk-l':''}" style="left:${left}px;min-width:${w}px;max-width:${w}px;width:${w}px"`;
+const emptyRow=(n,t='Sin resultados con los filtros actuales')=>`<tr><td class="empty" colspan="${n}">${t}</td></tr>`;
+
+/* ================= vista: EQUIPOS ================= */
+function viewInv(){
+  const s='inv';
+  return head('Equipos · Bodega 963','Estado actual de cada equipo: en bodega (con su repisa), entregado a un usuario y CC, en contingencia o en préstamo.')+
+  `<div class="chips" id="chips"></div>
+   <div class="filters">${fSearch(s,'Serial, activo o descripción')}${fSel(s,'disp','Dispositivo',dispsUsados())}${fSel(s,'estado','Estado',['NUEVO','USADO'])}${fSel(s,'repisa','N° repisa',REPISAS)}${fSel(s,'usuario','Usuario',USUARIOS)}${fSel(s,'cc','CC asignado',CCS)}${fSel(s,'traslado','Traslado',TRAS_OPTS)}${fDate(s,'desde','Ingreso desde')}${fDate(s,'hasta','Ingreso hasta')}${clearBtn(s)}</div>
+   <div class="tw"><table id="tbl"></table></div><div class="tfoot" id="tfoot"></div>`;
+}
+function filtInv(){
+  const f=ui.inv,q=f.q.trim().toLowerCase();
+  return equipos.filter(e=>{
+    const m=movById(e.ultMov);
+    return (!f.sit||e.situacion===f.sit)&&(!f.disp||e.dispositivo===f.disp)&&(!f.estado||e.estado===f.estado)&&(!f.repisa||e.repisa===f.repisa)
+      &&(!f.usuario||e.usuario===f.usuario)&&(!f.cc||e.ccAsignado===f.cc)&&(!f.traslado||m.traslado===f.traslado)
+      &&(!f.desde||e.fechaIngreso>=f.desde)&&(!f.hasta||e.fechaIngreso<=f.hasta)&&txtMatch(e,q);
+  }).sort((a,b)=>b.ultMov-a.ultMov);
+}
+function drawInv(){
+  const n=k=>equipos.filter(e=>!k||e.situacion===k).length;
+  const pend=equipos.filter(e=>movById(e.ultMov).traslado==='NO REALIZADO').length;
+  $('#chips').innerHTML=[['','Todos'],['BODEGA'],['ENTREGADO'],['CONTINGENCIA'],['PRESTAMO']].map(([k,l])=>
+    `<button class="chip ${ui.inv.sit===k?'on':''}" data-chip="${k}">${k?`<span class="dot" style="background:${SIT[k].col}"></span>`:''}${l||SIT[k].l}<b>${n(k)}</b></button>`).join('')+
+    `<span class="chip-sep"></span><button class="chip ${ui.inv.traslado==='NO REALIZADO'?'on':''}" data-chip-tras>${ic('truck')}Con traslado pendiente<b>${pend}</b></button>`;
+  const list=filtInv(),S=ui.invSel,all=list.length&&list.every(e=>S.has(e.id));
+  $('#tbl').innerHTML=`<thead><tr><th ${stk(0,34)}><input type="checkbox" data-all="inv" ${all?'checked':''}></th><th ${stk(34,150)}>Dispositivo</th><th ${stk(184,160)}>Serial</th><th ${stk(344,84,1)}>Activo</th>
+    <th>Situación actual</th><th>Fecha ingreso</th><th>Últ. seguimiento</th><th>Estado</th><th>Descripción</th><th>N° repisa</th><th>NIT proveedor</th><th>Proveedor</th><th>Fecha de la factura</th><th>N° de factura</th><th class="r">Valor compra + IVA (19%)</th><th>Usuario</th><th>CC asignado</th><th>Fecha de envío</th><th>Traslado</th><th></th></tr></thead><tbody>${
+    list.map(e=>{const m=movById(e.ultMov),sel=S.has(e.id);return `<tr data-eq="${e.id}" class="${sel?'sel':''}">
+      <td ${stk(0,34)}><input type="checkbox" data-sel="inv" value="${e.id}" ${sel?'checked':''}></td>
+      <td ${stk(34,150)}><span class="dv">${esc(e.dispositivo)}</span></td><td ${stk(184,160)}>${serialH(e.serial)}</td><td ${stk(344,84,1)}>${v(e.activo)}</td>
+      <td>${sitB(e.situacion)}</td><td>${fF(e.fechaIngreso)}</td><td>${segB(m.seguimiento,m.origen)}</td><td>${estB(e.estado)}</td>
+      <td class="desc" title="${esc(e.descripcion)}">${esc(e.descripcion)}</td><td>${v(e.repisa)}</td><td class="mono">${v(e.nit)}</td><td>${v(e.proveedor)}</td>
+      <td>${fF(e.fechaFactura)||DASH}</td><td>${v(e.numFactura)}</td><td class="r mono">${e.valor?fCOP(e.valor):DASH}</td>
+      <td>${v(e.usuario)}</td><td>${v(e.ccAsignado)}</td><td>${fF(e.fechaEnvio)||DASH}</td><td>${trasB(m.traslado)}</td>
+      <td><button class="ib" data-open-eq="${e.id}" title="Ver trazabilidad">${ic('eye')}</button></td></tr>`}).join('')||emptyRow(21)}</tbody>`;
+  $('#tfoot').innerHTML=`<span>${list.length} de ${equipos.length} equipos</span>`+(S.size?`<div class="bulk"><span><b>${S.size}</b> seleccionados</span>
+    <button class="btn sm" data-bulk="entregar">${ic('out')}Registrar salida</button>
+    <button class="btn sm ok" data-bulk="tras" data-scope="inv">${ic('check')}Marcar traslado REALIZADO</button>
+    <button class="btn ghost sm" data-bulk="clear" data-scope="inv">Quitar selección</button></div>`:'<span>Clic en una fila para ver su trazabilidad</span>');
+}
+
+/* ================= vista: HISTORIAL ================= */
+function viewHist(){
+  const s='hist';
+  return head('Historial de movimientos','Cada ingreso, salida, contingencia y préstamo registrado, con los 18 campos del Excel y quién lo registró.')+
+  `<div class="filters">${fSearch(s,'Serial, activo o descripción')}${fDate(s,'desde','Desde')}${fDate(s,'hasta','Hasta')}${fSel(s,'seg','Seguimiento',SEGS)}${fSel(s,'disp','Dispositivo',dispsUsados())}${fSel(s,'estado','Estado',['NUEVO','USADO'])}${fSel(s,'cc','CC asignado',CCS)}${fSel(s,'usuario','Usuario',USUARIOS)}${fSel(s,'traslado','Traslado',TRAS_OPTS)}
+   <button class="btn sm ${ui.hist.traslado==='NO REALIZADO'?'primary':''}" data-act="hist-pend">${ic('truck')}Solo pendientes</button>${clearBtn(s)}</div>
+   <div class="tw"><table id="tbl"></table></div><div class="tfoot" id="tfoot"></div>`;
+}
+function filtHist(){
+  const f=ui.hist,q=f.q.trim().toLowerCase();
+  return movs.filter(m=>{const e=eqById(m.equipoId);
+    return (!f.seg||m.seguimiento===f.seg)&&(!f.disp||e.dispositivo===f.disp)&&(!f.estado||m.estado===f.estado)&&(!f.cc||m.ccAsignado===f.cc)
+      &&(!f.usuario||m.usuario===f.usuario)&&(!f.traslado||m.traslado===f.traslado)&&(!f.desde||m.fecha>=f.desde)&&(!f.hasta||m.fecha<=f.hasta)&&txtMatch(e,q);
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha)||b.id-a.id);
+}
+function drawHist(){
+  const list=filtHist(),S=ui.histSel,all=list.length&&list.every(m=>S.has(m.id));
+  $('#tbl').innerHTML=`<thead><tr><th ${stk(0,34)}><input type="checkbox" data-all="hist" ${all?'checked':''}></th><th ${stk(34,88)}>Fecha</th><th ${stk(122,170)}>Seguimiento</th><th ${stk(292,150)}>Dispositivo</th><th ${stk(442,160,1)}>Serial</th>
+    <th>Activo</th><th>Estado</th><th>Descripción</th><th>N° repisa</th><th>NIT proveedor</th><th>Proveedor</th><th>Fecha de la factura</th><th>N° de factura</th><th class="r">Valor compra + IVA (19%)</th><th>Usuario</th><th>CC asignado</th><th>Fecha de envío</th><th>Traslado</th><th>Registró</th><th></th></tr></thead><tbody>${
+    list.map(m=>{const e=eqById(m.equipoId),sel=S.has(m.id),a=m.audit[0];return `<tr data-mov="${m.id}" class="${sel?'sel':''}">
+      <td ${stk(0,34)}><input type="checkbox" data-sel="hist" value="${m.id}" ${sel?'checked':''}></td>
+      <td ${stk(34,88)}>${fF(m.fecha)}</td><td ${stk(122,170)}>${segB(m.seguimiento,m.origen)}</td><td ${stk(292,150)}><span class="dv">${esc(e.dispositivo)}</span></td>
+      <td ${stk(442,160,1)}>${e.serial?`<a data-open-eq="${e.id}" class="mono">${esc(e.serial)}</a>`:serialH('')}</td>
+      <td>${e.activo?`<a data-open-eq="${e.id}">${esc(e.activo)}</a>`:DASH}</td><td>${estB(m.estado)}</td><td class="desc" title="${esc(e.descripcion)}">${esc(e.descripcion)}</td>
+      <td>${v(m.repisa)}</td><td class="mono">${v(e.nit)}</td><td>${v(e.proveedor)}</td><td>${fF(e.fechaFactura)||DASH}</td><td>${v(e.numFactura)}</td>
+      <td class="r mono">${e.valor?fCOP(e.valor):DASH}</td><td>${v(m.usuario)}</td><td>${v(m.ccAsignado)}</td><td>${fF(m.fechaEnvio)||DASH}</td><td>${trasB(m.traslado)}</td>
+      <td class="mut">${esc(a.por)} · ${esc(a.ts)}</td><td><button class="ib" data-open-mov="${m.id}" title="Detalle y auditoría">${ic('eye')}</button></td></tr>`}).join('')||emptyRow(21)}</tbody>`;
+  $('#tfoot').innerHTML=`<span>${list.length} de ${movs.length} movimientos</span>`+(S.size?`<div class="bulk"><span><b>${S.size}</b> seleccionados</span>
+    <button class="btn sm ok" data-bulk="tras" data-scope="hist">${ic('check')}Marcar traslado REALIZADO</button>
+    <button class="btn ghost sm" data-bulk="clear" data-scope="hist">Quitar selección</button></div>`:'<span>Clic en una fila para ver el detalle y la auditoría</span>');
+}
+
+/* ================= vista: TRASLADOS ================= */
+function viewTras(){
+  const s='tras',pend=movs.filter(m=>m.traslado==='NO REALIZADO').length,real=movs.filter(m=>m.traslado==='REALIZADO').length;
+  return head('Traslados en el ERP','Movimientos cuyo traslado todavía no se ha hecho en el ERP. Márcalos como REALIZADO uno a uno o en lote.')+
+  `<div class="filters"><label class="flt"><span>Ver</span><div class="seg sm" id="t_modo">
+     <button data-tmodo="NO REALIZADO" class="${ui.tras.modo==='NO REALIZADO'?'on':''}">Pendientes (${pend})</button>
+     <button data-tmodo="REALIZADO" class="${ui.tras.modo==='REALIZADO'?'on':''}">Realizados (${real})</button></div></label>
+   ${fSearch(s,'Serial, activo o descripción')}${fSel(s,'seg','Seguimiento',SEGS)}${fSel(s,'usuario','Usuario',USUARIOS)}${fSel(s,'cc','CC',CCS)}${clearBtn(s)}</div>
+   <div class="tw"><table id="tbl"></table></div><div class="tfoot" id="tfoot"></div>`;
+}
+function filtTras(){
+  const f=ui.tras,q=f.q.trim().toLowerCase();
+  return movs.filter(m=>{const e=eqById(m.equipoId);
+    return m.traslado===f.modo&&(!f.seg||m.seguimiento===f.seg)&&(!f.usuario||m.usuario===f.usuario)&&(!f.cc||m.ccAsignado===f.cc)&&txtMatch(e,q);
+  }).sort((a,b)=>(a.fechaEnvio||a.fecha).localeCompare(b.fechaEnvio||b.fecha)||a.id-b.id);
+}
+function drawTras(){
+  const list=filtTras(),S=ui.trasSel,pendMode=ui.tras.modo==='NO REALIZADO',all=list.length&&list.every(m=>S.has(m.id));
+  $('#tbl').innerHTML=`<thead><tr>${pendMode?`<th ${stk(0,34)}><input type="checkbox" data-all="tras" ${all?'checked':''}></th>`:`<th ${stk(0,34)}></th>`}<th ${stk(34,88)}>Fecha</th><th ${stk(122,170,1)}>Seguimiento</th>
+    <th>Dispositivo</th><th>Serial</th><th>Activo</th><th>Descripción</th><th>Usuario</th><th>Origen → destino</th><th>Fecha de envío</th><th>${pendMode?'Días pendiente':'Realizado'}</th><th>Registró</th><th></th></tr></thead><tbody>${
+    list.map(m=>{const e=eqById(m.equipoId),sel=S.has(m.id);
+      const ruta=m.seguimiento==='INGRESO'?'Retorno → 963':`963 → CC ${esc(m.ccAsignado)}`;
+      const d=dias(m.fechaEnvio||m.fecha,HOY),dc=d>30?'var(--err)':d>7?'var(--warn)':'var(--mut)';
+      const lastA=m.audit[m.audit.length-1];
+      return `<tr data-mov="${m.id}" class="${sel?'sel':''}">
+      <td ${stk(0,34)}>${pendMode?`<input type="checkbox" data-sel="tras" value="${m.id}" ${sel?'checked':''}>`:`<span style="color:var(--ok)">${ic('check')}</span>`}</td>
+      <td ${stk(34,88)}>${fF(m.fecha)}</td><td ${stk(122,170,1)}>${segB(m.seguimiento,m.origen)}</td>
+      <td><span class="dv">${esc(e.dispositivo)}</span></td><td>${e.serial?`<a data-open-eq="${e.id}" class="mono">${esc(e.serial)}</a>`:serialH('')}</td><td>${e.activo?`<a data-open-eq="${e.id}">${esc(e.activo)}</a>`:DASH}</td>
+      <td class="desc" title="${esc(e.descripcion)}">${esc(e.descripcion)}</td><td>${v(m.usuario)}</td><td class="mono">${ruta}</td><td>${fF(m.fechaEnvio)||DASH}</td>
+      <td>${pendMode?`<span class="pdays" style="color:${dc}">${d} días</span>`:`<span class="mut">${esc(lastA.ts)}</span>`}</td>
+      <td class="mut">${esc(m.audit[0].por)}</td>
+      <td>${pendMode?`<button class="btn sm ok" data-tras-one="${m.id}">${ic('check')}Marcar realizado</button>`:`<button class="ib" data-open-mov="${m.id}">${ic('eye')}</button>`}</td></tr>`}).join('')
+      ||emptyRow(13,pendMode?'No hay traslados pendientes con estos filtros':'Sin resultados')}</tbody>`;
+  $('#tfoot').innerHTML=`<span>${list.length} movimientos ${pendMode?'pendientes de traslado':'con traslado realizado'}</span>`+(S.size&&pendMode?`<div class="bulk"><span><b>${S.size}</b> seleccionados</span>
+    <button class="btn sm primary" data-bulk="tras" data-scope="tras">${ic('check')}Marcar ${S.size} como REALIZADO</button>
+    <button class="btn ghost sm" data-bulk="clear" data-scope="tras">Quitar selección</button></div>`:'');
+}
+
+/* ================= render ================= */
+const VIEWS={inv:[viewInv,drawInv],hist:[viewHist,drawHist],tras:[viewTras,drawTras]};
+function render(){drawTop();$('#content').innerHTML=VIEWS[ui.tab][0]();VIEWS[ui.tab][1]()}
+function refresh(full){drawTop();if(full)render();else VIEWS[ui.tab][1]();if(ui.drawer)drawDrawer()}
+
+/* ================= modales ================= */
+function openModal(w,html){const ov=$('#ov-'+w);ov.querySelector('.modal').innerHTML=html;ov.classList.add('open')}
+function closeModal(w){$('#ov-'+w).classList.remove('open')}
+function toast(msg,t='ok'){const d=document.createElement('div');d.className='toast '+t;d.innerHTML=ic(t==='ok'?'check':'warn')+`<div>${msg}</div>`;$('#toasts').appendChild(d);setTimeout(()=>d.remove(),3600)}
+
+const fld=(label,inner,o={})=>`<div class="f ${o.cls||''}" ${o.id?`id="${o.id}"`:''} ${o.only?`data-only="${o.only}"`:''}><label>${label}${o.req?' <i>*</i>':''}</label>${inner}${o.help?`<div class="help">${o.help}</div>`:''}<div class="err"></div></div>`;
+const mkCombo=(id,ph)=>`<div class="combo"><input class="inp" id="${id}" autocomplete="off" placeholder="${ph}"><div class="combo-list"></div></div>`;
+const selH=(id,opts,ph)=>`<select class="inp" id="${id}">${ph?`<option value="">${ph}</option>`:''}${opts.map(o=>`<option>${esc(o)}</option>`).join('')}</select>`;
+function err(id,msg){const f=$('#'+id).closest('.f');f.classList.add('bad');f.querySelector('.err').textContent=msg}
+function clearErrs(){$$('#ov-form .f.bad').forEach(f=>f.classList.remove('bad'))}
+function vFecha(x,min,max){if(!x)return 'Obligatorio';if(x<min)return `Fecha fuera de rango: anterior al ${fF(min)}`;if(x>max)return `Fecha fuera de rango: posterior al ${fF(max)}`;return ''}
+function focusErr(){const b=$('#ov-form .f.bad');if(b)b.scrollIntoView({block:'center',behavior:'smooth'})}
+
+/* lista desplegable con búsqueda: solo acepta valores del catálogo */
+function bindCombo(id,getOpts,onPick){
+  const inp=$('#'+id),wrap=inp.parentElement,list=wrap.querySelector('.combo-list');let hl=-1,cur=[];
+  const draw=()=>{const q=inp.value.trim().toLowerCase();cur=getOpts().filter(o=>o.toLowerCase().includes(q)).slice(0,120);hl=-1;
+    list.innerHTML=cur.length?cur.map((o,i)=>`<div class="combo-opt" data-i="${i}">${esc(o)}</div>`).join(''):'<div class="combo-empty">Sin coincidencias en el catálogo</div>';wrap.classList.add('open')};
+  const pick=x=>{inp.value=x;wrap.classList.remove('open');inp.closest('.f')?.classList.remove('bad');onPick&&onPick(x)};
+  inp.addEventListener('focus',draw);
+  inp.addEventListener('input',()=>{draw();inp.closest('.f')?.classList.remove('bad')});
+  inp.addEventListener('keydown',ev=>{
+    if(!wrap.classList.contains('open'))return;
+    const items=$$('.combo-opt',list);
+    if(ev.key==='ArrowDown')hl=Math.min(hl+1,items.length-1);
+    else if(ev.key==='ArrowUp')hl=Math.max(hl-1,0);
+    else if(ev.key==='Enter'){ev.preventDefault();if(hl>=0)pick(cur[hl]);else if(cur.length===1)pick(cur[0]);return}
+    else if(ev.key==='Escape'){ev.stopPropagation();wrap.classList.remove('open');return}
+    else return;
+    ev.preventDefault();items.forEach((x,i)=>x.classList.toggle('hl',i===hl));items[hl]?.scrollIntoView({block:'nearest'});
+  });
+  list.addEventListener('mousedown',ev=>{const o=ev.target.closest('.combo-opt');if(o){ev.preventDefault();pick(cur[+o.dataset.i])}});
+  inp.addEventListener('blur',()=>setTimeout(()=>{wrap.classList.remove('open');
+    const t=inp.value.trim().toUpperCase().replace(/\s+/g,' ');const exact=getOpts().find(o=>o.toUpperCase()===t);
+    if(exact){if(exact!==inp.value)inp.value=exact;onPick&&onPick(exact)}},130));
+}
+
+/* ================= formulario: INGRESO ================= */
+let F={};
+function openIngreso(opt={}){
+  const r=opt.retornoDe?eqById(opt.retornoDe):null;
+  F={kind:'ing',retorno:r,match:null,matchBy:'',locked:false};
+  openModal('form',`
+  <div class="mh"><div><div class="mt">${ic('in')}Registrar ingreso a bodega 963</div><div class="ms">Seguimiento: <b>INGRESO</b> · Quién lo registra y cuándo queda guardado automáticamente</div></div><button class="x" data-close="form">${ic('x')}</button></div>
+  <div class="mb" id="fbody" data-estado="${r?'USADO':''}" ${r?'data-ret="1"':''}>
+    ${r?`<div style="margin-top:14px">${alertH('info',`Retorno de <b>${esc(r.dispositivo)}</b> · ${esc(r.descripcion)}<br>Hoy está ${sitB(r.situacion)} con <b>${esc(r.usuario)}</b> · CC <b>${esc(r.ccAsignado)}</b>. <a data-open-eq="${r.id}">Ver historial</a>`)}</div>`:''}
+    <div class="fsec">Equipo</div>
+    <div class="fg">
+      ${fld('Fecha de ingreso',`<input type="date" class="inp" id="i_fecha" value="${HOY}" min="${MIN_FECHA}" max="${HOY}">`,{req:1})}
+      ${fld('Estado',selH('i_estado',['NUEVO','USADO'],'Seleccionar…'),{req:1})}
+      ${fld('Dispositivo',mkCombo('i_disp','Buscar en el catálogo…'),{req:1,cls:'full',help:'Lista cerrada: evita "MOUSE " con espacio, "ROUTERBOAR", etc.'})}
+      ${fld('Descripción',`<textarea class="inp" id="i_desc" placeholder="Marca, modelo, características, novedades (ej. FALTA ESPUMA)"></textarea>`,{req:1,cls:'full'})}
+      ${fld('Serial',`<div class="inrow"><input class="inp mono" id="i_serial" placeholder="Serial del equipo"><label class="ck"><input type="checkbox" id="i_noserial">Sin serial</label></div>`,{req:1})}
+      ${fld('Activo',`<div class="inrow"><input class="inp" id="i_activo" placeholder="N° de activo fijo"><label class="ck"><input type="checkbox" id="i_noactivo">Sin activo</label></div>`,{req:1})}
+      <div class="f full" id="i_dup" style="display:none"></div>
+      ${fld('Número de repisa',selH('i_repisa',REPISAS,'Seleccionar…'),{req:1})}
+      ${fld('Cantidad',`<input type="number" class="inp" id="i_cant" value="1" min="1" max="50">`,{id:'f_cant',help:'Solo para equipos sin serial ni activo. Se crea una unidad por cada uno.'})}
+    </div>
+
+    <div class="fsec">Traslado</div>
+    <div class="fg">
+      <div data-for="NUEVO">${fld('Traslado en el ERP',`<input class="inp" value="No aplica" disabled>`,{help:'Equipo nuevo: no aplica'})}</div>
+      <div data-for="USADO">${fld('Traslado en el ERP',selH('i_tras',['NO REALIZADO','REALIZADO']),{help:'Por defecto NO REALIZADO'})}</div>
+    </div>
+
+    <div data-hide-ret>
+      <div class="fsec">Datos de compra <span class="mut" id="i_comprahint">· obligatorios si el equipo es NUEVO, opcionales si es USADO</span></div>
+      <div class="fg">
+        ${fld('Proveedor <i class="rq">*</i>',mkCombo('i_prov','Buscar proveedor…'))}
+        ${fld('NIT proveedor',`<input class="inp mono" id="i_nit" disabled placeholder="Se llena al elegir el proveedor">`)}
+        ${fld('Fecha de la factura <i class="rq">*</i>',`<input type="date" class="inp" id="i_ffact" min="${MIN_FECHA}" max="${HOY}">`)}
+        ${fld('Número de factura <i class="rq">*</i>',`<input class="inp mono" id="i_nfact" placeholder="Ej. HTFE-14609">`)}
+        ${fld('Valor de compra (sin IVA)',`<input type="number" class="inp" id="i_vbase" min="0" step="1" placeholder="0">`)}
+        ${fld('Valor de compra + IVA (19%) <i class="rq">*</i>',`<input type="number" class="inp" id="i_vtotal" min="0" step="1" placeholder="0"><div class="calc" id="i_vcalc"></div>`)}
+      </div>
+    </div>
+  </div>
+  <div class="mf"><span class="mut"><i style="color:var(--err);font-style:normal">*</i> obligatorio</span><div><button class="btn" data-close="form">Cancelar</button><button class="btn primary" id="i_ok">${ic('check')}Registrar ingreso</button></div></div>`);
+
+  bindCombo('i_disp',()=>DISPOSITIVOS);
+  bindCombo('i_prov',()=>PROV_N,x=>{$('#i_nit').value=(PROV.find(p=>p.n===x)||{}).nit||''});
+  $('#i_estado').addEventListener('change',()=>{$('#fbody').dataset.estado=$('#i_estado').value;clearErrs()});
+  ['i_serial','i_activo'].forEach(id=>$('#'+id).addEventListener('input',dupCheck));
+  ['i_noserial','i_noactivo'].forEach(id=>$('#'+id).addEventListener('change',()=>{
+    const inp=$('#'+(id==='i_noserial'?'i_serial':'i_activo'));inp.disabled=$('#'+id).checked;if(inp.disabled)inp.value='';inp.closest('.f').classList.remove('bad');syncCant();dupCheck()}));
+  const vb=$('#i_vbase'),vt=$('#i_vtotal');
+  const calc=()=>{const t=+vt.value;$('#i_vcalc').innerHTML=t>0?`Base <b>${fCOP(t/1.19)}</b> · IVA <b>${fCOP(t-t/1.19)}</b> · Total <b>${fCOP(t)}</b>`:''};
+  vb.addEventListener('input',()=>{vt.value=vb.value?Math.round(+vb.value*1.19):'';calc()});
+  vt.addEventListener('input',()=>{vb.value=vt.value?Math.round(+vt.value/1.19):'';calc()});
+  $('#i_ok').onclick=submitIngreso;
+  syncCant();
+  if(r){
+    $('#i_disp').value=r.dispositivo;$('#i_desc').value=r.descripcion;$('#i_serial').value=r.serial;$('#i_activo').value=r.activo;
+    $('#i_noserial').checked=!r.serial;$('#i_noactivo').checked=!r.activo;$('#i_estado').value='USADO';
+    ['i_disp','i_desc','i_serial','i_activo','i_noserial','i_noactivo','i_estado'].forEach(id=>$('#'+id).disabled=true);
+    syncCant();
+  }
+}
+function syncCant(){$('#f_cant').style.display=(!F.retorno&&$('#i_noserial').checked&&$('#i_noactivo').checked)?'':'none'}
+function setEstado(x,lock){const el=$('#i_estado');el.value=x;el.disabled=lock;$('#fbody').dataset.estado=x}
+function lockEq(m){if(!F.locked){$('#i_disp').value=m.dispositivo;$('#i_desc').value=m.descripcion}
+  $('#i_disp').disabled=$('#i_desc').disabled=true;setEstado('USADO',true);$('#fbody').dataset.ret='1';F.locked=true}
+function unlockEq(){if(F.locked){$('#i_disp').value='';$('#i_desc').value='';setEstado('',false)}$('#i_disp').disabled=$('#i_desc').disabled=false;delete $('#fbody').dataset.ret;F.locked=false}
+function dupCheck(){
+  if(F.retorno)return;
+  const s=$('#i_noserial').checked?'':normK($('#i_serial').value),a=$('#i_noactivo').checked?'':normK($('#i_activo').value);
+  let m=null,by='';
+  if(s){m=equipos.find(e=>normK(e.serial)===s);if(m)by='serial'}
+  if(!m&&a){m=equipos.find(e=>normK(e.activo)===a);if(m)by='activo'}
+  F.match=m;F.matchBy=by;
+  const box=$('#i_dup');
+  if(!m){box.style.display='none';box.innerHTML='';if(F.locked)unlockEq();return}
+  box.style.display='';
+  const where=m.situacion==='BODEGA'?`en repisa <b>${esc(m.repisa)}</b>`:`con <b>${esc(m.usuario)}</b> · CC <b>${esc(m.ccAsignado)}</b>`;
+  const d=`<b>${esc(m.dispositivo)}</b> · ${esc(m.descripcion)}<br>${sitB(m.situacion)} ${where}`;
+  const link=` <a data-open-eq="${m.id}">Ver su historial →</a>`;
+  if(m.situacion==='BODEGA'){box.innerHTML=alertH('err',`Este ${by} ya está en bodega: ${d}<br>No puede ingresar dos veces.${link}`);if(F.locked)unlockEq()}
+  else{box.innerHTML=alertH('info',`Equipo encontrado por ${by}: ${d}<br>Se registrará como <b>retorno a bodega</b> del mismo equipo (USADO) y se conservará su historial.${link}`);lockEq(m)}
+}
+function submitIngreso(){
+  clearErrs();let ok=true;const g=id=>$('#'+id).value.trim();
+  const target=F.retorno||(F.match&&F.match.situacion!=='BODEGA'?F.match:null);
+  const estado=target?'USADO':g('i_estado');
+  const fecha=g('i_fecha');let e1=vFecha(fecha,MIN_FECHA,HOY);
+  if(!e1&&target){const last=movById(target.ultMov).fecha;if(fecha<last)e1=`Es anterior a su último movimiento (${fF(last)})`}
+  if(e1){err('i_fecha',e1);ok=false}
+  if(!estado){err('i_estado','Selecciona NUEVO o USADO');ok=false}
+  const repisa=g('i_repisa');if(!repisa){err('i_repisa','Selecciona la repisa');ok=false}
+  let cant=1;const ns=$('#i_noserial').checked,na=$('#i_noactivo').checked;
+  let prov=null;
+  if(!target){
+    const disp=g('i_disp');if(!DISPOSITIVOS.includes(disp)){err('i_disp',disp?'No está en el catálogo. Elige una opción de la lista.':'Obligatorio');ok=false}
+    if(!g('i_desc')){err('i_desc','Obligatorio');ok=false}
+    if(!ns&&!g('i_serial')){err('i_serial','Escribe el serial o marca "Sin serial"');ok=false}
+    if(!na&&!g('i_activo')){err('i_activo','Escribe el activo o marca "Sin activo"');ok=false}
+    if(ns&&na){cant=parseInt(g('i_cant'),10);if(!(cant>=1&&cant<=50)){err('i_cant','Entre 1 y 50');ok=false}}
+    if(F.match){err(F.matchBy==='serial'?'i_serial':'i_activo','El equipo ya está en bodega');ok=false}
+    /* datos de compra: obligatorios si es NUEVO; si es USADO solo se validan los que se llenen */
+    const req=estado==='NUEVO';
+    if(g('i_prov')||req){prov=PROV.find(p=>p.n===g('i_prov'));if(!prov){err('i_prov',g('i_prov')?'No está en el catálogo de proveedores':'Obligatorio para equipos nuevos');ok=false}}
+    const ff=g('i_ffact');
+    if(ff||req){const e2=vFecha(ff,MIN_FECHA,fecha&&!e1?fecha:HOY);if(e2){err('i_ffact',ff&&ff>fecha?'No puede ser posterior a la fecha de ingreso':e2);ok=false}}
+    if(req&&!g('i_nfact')){err('i_nfact','Obligatorio para equipos nuevos');ok=false}
+    if((g('i_vtotal')||req)&&!(+g('i_vtotal')>0)){err('i_vtotal','Escribe el valor (base o con IVA)');ok=false}
+  }
+  if(!ok){focusErr();return}
+
+  const base={fecha,seguimiento:'INGRESO',origen:target?'RETORNO':'ALTA',repisa,traslado:estado==='NUEVO'?'NO APLICA':g('i_tras')};
+  let last;
+  if(target){registrarMov(target,base);last=target;toast(`Retorno registrado: <b>${esc(target.dispositivo)}</b> vuelve a bodega (repisa ${esc(repisa)})`)}
+  else{
+    const compra={proveedor:prov?prov.n:'',nit:prov?prov.nit:'',fechaFactura:g('i_ffact'),numFactura:g('i_nfact').toUpperCase(),valor:+g('i_vtotal')>0?Math.round(+g('i_vtotal')):null};
+    for(let i=0;i<cant;i++){
+      last=nuevoEquipo({dispositivo:g('i_disp'),descripcion:g('i_desc').toUpperCase(),serial:ns?'':g('i_serial').toUpperCase(),activo:na?'':g('i_activo'),estado,...compra});
+      registrarMov(last,base);
+    }
+    toast(`${cant>1?cant+' equipos ingresados':'Ingreso registrado'}: <b>${esc(last.dispositivo)}</b> (${estado}) en repisa ${esc(repisa)} · <a data-open-eq="${last.id}">Ver</a>`);
+  }
+  closeModal('form');refresh(true);
+}
+
+/* ================= formulario: SALIDA / ASIGNACIÓN ================= */
+const SEG_HINT={'SALIDA':'Entrega del equipo a un usuario y a un CC destino.','CONTINGENCIA BOD 72':'El equipo sale temporalmente por contingencia a la bodega 72. Cuando vuelva se registra como ingreso (USADO).','PRÉSTAMO':'Préstamo temporal. Cuando vuelva se registra como ingreso (USADO).','PRÉSTAMO BARRANCA':'Préstamo temporal a Barranca. Cuando vuelva se registra como ingreso (USADO).'};
+function openSalida(pre=[]){
+  F={kind:'sal',seg:'SALIDA',sel:new Set(pre)};
+  openModal('form',`
+  <div class="mh"><div><div class="mt">${ic('out')}Registrar salida / asignación</div><div class="ms">El equipo sale de bodega hacia un usuario y un CC destino</div></div><button class="x" data-close="form">${ic('x')}</button></div>
+  <div class="mb">
+    <div class="fsec">Tipo de movimiento (seguimiento)</div>
+    <div class="seg" id="s_seg">${['SALIDA','CONTINGENCIA BOD 72','PRÉSTAMO','PRÉSTAMO BARRANCA'].map(x=>`<button type="button" data-v="${x}" class="${x==='SALIDA'?'on':''}">${x}</button>`).join('')}</div>
+    <div class="hint" id="s_hint">${SEG_HINT.SALIDA}</div>
+    <div class="fsec">Equipos <span class="mut" id="s_cnt"></span></div>
+    <div class="f" id="f_eqs"><div class="srch big">${ic('search')}<input class="inp" id="s_q" placeholder="Buscar por serial, activo o descripción…" autocomplete="off"></div>
+      <div class="chips-sel" id="s_chips"></div><div class="picker" id="s_list"></div>
+      <div class="help">Solo se pueden elegir equipos que estén <b>en bodega</b>. Los demás se muestran deshabilitados para evitar salidas duplicadas.</div><div class="err"></div></div>
+    <div class="fsec">Destino</div>
+    <div class="fg">
+      ${fld('Usuario',mkCombo('s_user','Buscar usuario…'),{req:1})}
+      ${fld('CC asignado',mkCombo('s_cc','Buscar CC…'),{req:1})}
+      ${fld('Fecha del movimiento',`<input type="date" class="inp" id="s_fecha" value="${HOY}" min="${MIN_FECHA}" max="${HOY}">`,{req:1})}
+      ${fld('Fecha de envío',`<input type="date" class="inp" id="s_fenv" value="${HOY}" min="${MIN_FECHA}" max="${MAX_ENVIO}">`,{req:1,help:'No puede ser anterior al movimiento ni más de 30 días en el futuro'})}
+      ${fld('Traslado en el ERP',selH('s_tras',['NO REALIZADO','REALIZADO']),{help:'Por defecto NO REALIZADO. Se puede marcar después en "Traslados ERP".'})}
+    </div>
+  </div>
+  <div class="mf"><span class="mut"><i style="color:var(--err);font-style:normal">*</i> obligatorio</span><div><button class="btn" data-close="form">Cancelar</button><button class="btn primary" id="s_ok">${ic('check')}<span id="s_oklbl">Registrar salida</span></button></div></div>`);
+  bindCombo('s_user',()=>USUARIOS);
+  bindCombo('s_cc',()=>CCS);
+  $$('#s_seg button').forEach(b=>b.onclick=()=>{F.seg=b.dataset.v;$$('#s_seg button').forEach(x=>x.classList.toggle('on',x===b));$('#s_hint').textContent=SEG_HINT[F.seg];$('#s_oklbl').textContent=F.seg==='SALIDA'?'Registrar salida':'Registrar '+F.seg.toLowerCase()});
+  $('#s_q').addEventListener('input',drawPicker);
+  $('#s_list').addEventListener('change',ev=>{const c=ev.target.closest('[data-pk]');if(!c)return;const id=+c.dataset.pk;c.checked?F.sel.add(id):F.sel.delete(id);$('#f_eqs').classList.remove('bad');drawPicker()});
+  $('#s_chips').addEventListener('click',ev=>{const b=ev.target.closest('[data-unpk]');if(b){F.sel.delete(+b.dataset.unpk);drawPicker()}});
+  $('#s_ok').onclick=submitSalida;
+  drawPicker();
+}
+function drawPicker(){
+  const q=$('#s_q').value.trim().toLowerCase();
+  let l=equipos.filter(e=>txtMatch(e,q)).sort((a,b)=>(a.situacion==='BODEGA'?0:1)-(b.situacion==='BODEGA'?0:1)||b.id-a.id);
+  const tot=l.length;l=l.slice(0,60);
+  $('#s_list').innerHTML=l.map(e=>{const dis=e.situacion!=='BODEGA',on=F.sel.has(e.id);
+    return `<label class="pk${dis?' dis':''}${on?' on':''}"><input type="checkbox" data-pk="${e.id}" ${on?'checked':''} ${dis?'disabled':''}>
+      <span class="pk-d" title="${esc(e.dispositivo)}">${esc(e.dispositivo)}</span><span class="mono">${e.serial?esc(e.serial):'<span class="dash">sin serial</span>'}</span>
+      <span>${e.activo?'Act. '+esc(e.activo):'<span class="dash">sin activo</span>'}</span><span class="pk-x" title="${esc(e.descripcion)}">${esc(e.descripcion)}</span>
+      <span class="pk-r">${dis?`${sitB(e.situacion)} ${esc(e.usuario)} · CC ${esc(e.ccAsignado)}`:`Repisa ${esc(e.repisa)}`}</span></label>`}).join('')
+    +(tot>60?`<div class="pk-more">Mostrando 60 de ${tot}. Afina la búsqueda.</div>`:'')||'<div class="pk-more">Sin resultados</div>';
+  $('#s_chips').innerHTML=[...F.sel].map(id=>{const e=eqById(id);return `<span class="cs">${esc(e.dispositivo)} · ${esc(e.serial||(e.activo?'Act. '+e.activo:e.cod))}<button data-unpk="${id}" title="Quitar">${ic('x')}</button></span>`}).join('');
+  $('#s_cnt').textContent=F.sel.size?`· ${F.sel.size} seleccionado${F.sel.size>1?'s':''}`:'';
+}
+function submitSalida(){
+  clearErrs();let ok=true;
+  const us=$('#s_user').value.trim(),cc=$('#s_cc').value.trim(),f=$('#s_fecha').value,fe=$('#s_fenv').value,tr=$('#s_tras').value;
+  const sel=[...F.sel].map(eqById);
+  if(!sel.length){err('f_eqs','Selecciona al menos un equipo que esté en bodega');ok=false}
+  if(!USUARIOS.includes(us)){err('s_user',us?'El usuario no está en el catálogo':'Obligatorio');ok=false}
+  if(!CCS.includes(cc)){err('s_cc',cc?'El CC no está en el catálogo':'Obligatorio');ok=false}
+  else if(cc==='963'){err('s_cc','El CC destino no puede ser la misma bodega 963');ok=false}
+  let ef=vFecha(f,MIN_FECHA,HOY);
+  if(!ef&&sel.length){const mx=sel.reduce((a,e)=>e.fechaIngreso>a?e.fechaIngreso:a,'');if(f<mx)ef=`Es anterior al ingreso del equipo a bodega (${fF(mx)})`}
+  if(ef){err('s_fecha',ef);ok=false}
+  let ee=vFecha(fe,MIN_FECHA,MAX_ENVIO);if(!ee&&f&&fe<f)ee='No puede ser anterior a la fecha del movimiento';
+  if(ee){err('s_fenv',ee);ok=false}
+  if(!ok){focusErr();return}
+  sel.forEach(e=>registrarMov(e,{fecha:f,seguimiento:F.seg,usuario:us,ccAsignado:cc,fechaEnvio:fe,traslado:tr}));
+  ui.invSel.clear();
+  toast(`${F.seg}: <b>${sel.length}</b> equipo${sel.length>1?'s':''} a <b>${esc(us)}</b> · CC ${esc(cc)}${tr==='NO REALIZADO'?' · traslado pendiente':''}`);
+  closeModal('form');refresh(true);
+}
+
+/* ================= panel lateral: trazabilidad ================= */
+function openEquipo(id){ui.drawer=id;drawDrawer();$('#drawer').classList.add('open');$('#drw-ov').classList.add('open')}
+function closeDrawer(){ui.drawer=null;$('#drawer').classList.remove('open');$('#drw-ov').classList.remove('open')}
+function tlTxt(m){
+  if(m.seguimiento==='INGRESO')return m.origen==='RETORNO'?['Volvió a bodega',`Quedó en repisa ${m.repisa} · USADO`]:[`Ingresó a bodega (${m.estado})`,`Repisa ${m.repisa}`];
+  const t={'SALIDA':`Salió al CC ${m.ccAsignado}`,'CONTINGENCIA BOD 72':`Contingencia BOD 72 · CC ${m.ccAsignado}`,'PRÉSTAMO':`Préstamo al CC ${m.ccAsignado}`,'PRÉSTAMO BARRANCA':`Préstamo Barranca · CC ${m.ccAsignado}`}[m.seguimiento];
+  return [t,`Usuario: ${m.usuario} · envío ${fF(m.fechaEnvio)}${m.repisa?` · salió de repisa ${m.repisa}`:''}`];
+}
+function drawDrawer(){
+  const e=eqById(ui.drawer);if(!e)return;
+  const ms=movsDe(e.id),last=ms[0],pend=last.traslado==='NO REALIZADO';
+  const kv=(k,x,c='')=>`<div class="${c}"><div class="k">${k}</div><div class="v">${x}</div></div>`;
+  const now=e.situacion==='BODEGA'
+    ?`<div class="now c-info">${ic('pin')}<div>En bodega 963 · <b>repisa ${esc(e.repisa)}</b><br><span class="mut">Desde ${fF(e.fechaIngreso)}</span></div></div>`
+    :`<div class="now c-${SIT[e.situacion].c}">${ic('user')}<div>${SIT[e.situacion].l} a <b>${esc(e.usuario)}</b> · CC <b>${esc(e.ccAsignado)}</b><br><span class="mut">Enviado el ${fF(e.fechaEnvio)} · ${esc(last.seguimiento)}</span></div></div>`;
+  $('#drawer').innerHTML=`
+  <div class="dh"><div><div class="eyebrow">Trazabilidad del equipo · ${e.cod}</div><h2>${esc(e.dispositivo)}</h2><p>${esc(e.descripcion)}</p>
+    <div class="tags">${sitB(e.situacion)}${estB(e.estado)}${pend?'<span class="bd b-warn">Traslado pendiente</span>':''}</div></div>
+    <button class="x" data-close-drawer>${ic('x')}</button></div>
+  <div class="db">
+    ${now}
+    <div class="fsec">Identificación</div>
+    <div class="kv">${kv('Serial',e.serial?`<span class="mono">${esc(e.serial)}</span>`:DASH)}${kv('Activo',v(e.activo))}${kv('Estado',esc(e.estado))}</div>
+    <div class="fsec">Datos de compra</div>
+    ${e.proveedor?`<div class="kv">${kv('Proveedor',esc(e.proveedor),'wide')}${kv('NIT',`<span class="mono">${esc(e.nit)}</span>`)}${kv('N° factura',esc(e.numFactura))}${kv('Fecha factura',fF(e.fechaFactura))}${kv('Valor + IVA (19%)',fCOP(e.valor),'wide')}</div>`
+      :`<div class="now">${ic('info')}<div class="mut">Sin datos de factura registrados.</div></div>`}
+    <div class="d-act">
+      ${e.situacion==='BODEGA'?`<button class="btn primary sm" data-act="d-salida" data-id="${e.id}">${ic('out')}Registrar salida</button>`
+        :`<button class="btn primary sm" data-act="d-retorno" data-id="${e.id}">${ic('back')}Registrar retorno a bodega</button>`}
+      ${pend?`<button class="btn sm ok" data-tras-one="${last.id}">${ic('check')}Marcar traslado REALIZADO</button>`:''}
+    </div>
+    <div class="fsec">Movimientos <span class="mut">· ${ms.length} · del más reciente al más antiguo</span></div>
+    <ol class="tl">${ms.map((m,i)=>{const [t,s]=tlTxt(m),a=m.audit[0];return `<li class="tl-i c-${SEG_C[m.seguimiento]} ${i===0?'first':''}" data-open-mov="${m.id}"><div class="tl-dot"></div><div class="tl-b">
+      <div class="tl-top"><span class="tl-d">${fF(m.fecha)}</span>${segB(m.seguimiento,m.origen)}${m.traslado!=='NO APLICA'?trasB(m.traslado):''}</div>
+      <div class="tl-t">${esc(t)}</div><div class="tl-s">${esc(s)}</div><div class="tl-a">${ic('shield')}Registró ${esc(a.por)} · ${esc(a.ts)}</div></div></li>`}).join('')}</ol>
+  </div>`;
+}
+
+/* ================= detalle del movimiento + auditoría ================= */
+function openMov(id){
+  const m=movById(id),e=eqById(m.equipoId);
+  const rows=[['FECHA',fF(m.fecha)],['SEGUIMIENTO',segB(m.seguimiento,m.origen)],['ESTADO',esc(m.estado)],['DISPOSITIVO',esc(e.dispositivo)],
+    ['SERIAL',e.serial?`<span class="mono">${esc(e.serial)}</span>`:DASH],['ACTIVO',v(e.activo)],['DESCRIPCION',esc(e.descripcion),'wide'],['NUMERO DE REPISA',v(m.repisa)],
+    ['NIT PROVEEDOR',v(e.nit)],['PROVEEDOR',v(e.proveedor)],['FECHA DE LA FACTURA',fF(e.fechaFactura)||DASH],['NUMERO DE FACTURA',v(e.numFactura)],['VALOR DE COMPRA + IVA (19%)',e.valor?fCOP(e.valor):DASH],
+    ['USUARIO',v(m.usuario)],['CC ASIGNADO',v(m.ccAsignado)],['FECHA DE ENVIO',fF(m.fechaEnvio)||DASH],['TRASLADO',trasB(m.traslado),'wide']];
+  openModal('det',`
+  <div class="mh"><div><div class="mt">${ic('hist')}Movimiento #${m.id} · ${esc(m.seguimiento)}</div><div class="ms">${esc(e.dispositivo)} · ${esc(e.serial||e.activo||e.cod)}</div></div><button class="x" data-close="det">${ic('x')}</button></div>
+  <div class="mb">
+    <div class="fsec">Campos del movimiento</div>
+    <div class="kv">${rows.map(([k,x,c])=>`<div class="${c||''}"><div class="k">${k}</div><div class="v">${x}</div></div>`).join('')}</div>
+    <div class="fsec">Auditoría</div>
+    <ul class="audit">${m.audit.map(a=>`<li>${ic(a.i||'shield')}<span class="t">${esc(a.ts)}</span><b>${esc(a.por)}</b><span>${esc(a.acc)}</span></li>`).join('')}</ul>
+  </div>
+  <div class="mf"><button class="btn sm" data-act="m-eq" data-id="${e.id}">${ic('eye')}Ver trazabilidad del equipo</button><div>
+    ${m.traslado==='NO REALIZADO'?`<button class="btn sm ok" data-act="m-tras" data-id="${m.id}">${ic('check')}Marcar traslado REALIZADO</button>`:''}
+    <button class="btn sm" data-close="det">Cerrar</button></div></div>`);
+}
+function confirmTras(ids){
+  ids=ids.filter(id=>movById(id)?.traslado==='NO REALIZADO');
+  if(!ids.length){toast('No hay traslados pendientes en la selección','warn');return}
+  openModal('det',`
+  <div class="mh"><div class="mt">${ic('truck')}Marcar traslado como REALIZADO</div><button class="x" data-close="det">${ic('x')}</button></div>
+  <div class="mb"><p style="margin-top:14px;line-height:1.5">Se marcarán <b>${ids.length}</b> movimiento${ids.length>1?'s':''} como <b>REALIZADO</b> en el ERP. Quedará en la auditoría de cada uno a nombre de <b>${USUARIO_ACTUAL}</b>.</p>
+    <ul class="mini">${ids.map(id=>{const m=movById(id),e=eqById(m.equipoId);return `<li>${segB(m.seguimiento)}<span class="dv">${esc(e.dispositivo)}</span><span class="mono mut">${esc(e.serial||e.activo||e.cod)}</span><span class="mut">${m.seguimiento==='INGRESO'?'retorno a bodega':'→ CC '+esc(m.ccAsignado)+' · '+esc(m.usuario)}</span></li>`}).join('')}</ul></div>
+  <div class="mf"><span></span><div><button class="btn" data-close="det">Cancelar</button><button class="btn primary" id="c_ok">${ic('check')}Confirmar</button></div></div>`);
+  $('#c_ok').onclick=()=>{const n=marcarTraslados(ids);closeModal('det');toast(`${n} traslado${n>1?'s':''} marcado${n>1?'s':''} como REALIZADO`);refresh(ui.tab==='tras')};
+}
+
+/* ================= eventos ================= */
+document.addEventListener('click',ev=>{
+  const t=ev.target;let el;
+  if((el=t.closest('[data-tab]'))){ui.tab=el.dataset.tab;render();return}
+  if((el=t.closest('[data-close]'))){closeModal(el.dataset.close);return}
+  if(t.closest('[data-close-drawer]')||t.id==='drw-ov'){closeDrawer();return}
+  if(t.classList.contains('ov')&&t.id==='ov-det'){closeModal('det');return}
+  if((el=t.closest('[data-open-eq]'))){ev.preventDefault();openEquipo(+el.dataset.openEq);return}
+  if((el=t.closest('[data-tras-one]'))){const n=marcarTraslados([+el.dataset.trasOne]);if(n)toast('Traslado marcado como REALIZADO');refresh(ui.tab==='tras');return}
+  if((el=t.closest('[data-open-mov]'))){openMov(+el.dataset.openMov);return}
+  if((el=t.closest('[data-chip]'))){ui.inv.sit=el.dataset.chip;ui.invSel.clear();drawInv();return}
+  if(t.closest('[data-chip-tras]')){ui.inv.traslado=ui.inv.traslado==='NO REALIZADO'?'':'NO REALIZADO';render();return}
+  if((el=t.closest('[data-tmodo]'))){ui.tras.modo=el.dataset.tmodo;ui.trasSel.clear();render();return}
+  if((el=t.closest('[data-bulk]'))){
+    const b=el.dataset.bulk,sc=el.dataset.scope;
+    if(b==='clear'){ui[sc+'Sel'].clear();VIEWS[ui.tab][1]()}
+    else if(b==='entregar'){const all=[...ui.invSel],ok=all.filter(id=>eqById(id).situacion==='BODEGA');
+      if(ok.length<all.length)toast(`${all.length-ok.length} equipo(s) no están en bodega y no se incluyen`,'warn');openSalida(ok)}
+    else if(b==='tras'){const ids=sc==='inv'?[...ui.invSel].map(id=>eqById(id).ultMov):[...ui[sc+'Sel']];confirmTras(ids)}
+    return;
+  }
+  if((el=t.closest('[data-act]'))){
+    const a=el.dataset.act,id=+el.dataset.id;
+    if(a==='ingreso')openIngreso();
+    else if(a==='salida')openSalida();
+    else if(a==='clear'){ui[el.dataset.scope]={...EMPTY[el.dataset.scope],...(el.dataset.scope==='tras'?{modo:ui.tras.modo}:{})};render()}
+    else if(a==='hist-pend'){ui.hist.traslado=ui.hist.traslado==='NO REALIZADO'?'':'NO REALIZADO';render()}
+    else if(a==='d-salida'){closeDrawer();openSalida([id])}
+    else if(a==='d-retorno'){closeDrawer();openIngreso({retornoDe:id})}
+    else if(a==='m-eq'){closeModal('det');openEquipo(id)}
+    else if(a==='m-tras'){marcarTraslados([id]);toast('Traslado marcado como REALIZADO');refresh(ui.tab==='tras');openMov(id)}
+    return;
+  }
+  const row=t.closest('#tbl tbody tr');
+  if(row&&!t.closest('input,button,a,label')){if(row.dataset.eq)openEquipo(+row.dataset.eq);else if(row.dataset.mov)openMov(+row.dataset.mov)}
+});
+document.addEventListener('input',ev=>{
+  const el=ev.target;if(!el.dataset.f||!el.closest('#content'))return;
+  ui[el.dataset.scope][el.dataset.f]=el.value;ui[el.dataset.scope+'Sel'].clear();VIEWS[ui.tab][1]();
+});
+document.addEventListener('change',ev=>{
+  const el=ev.target;
+  if(el.dataset.sel){const S=ui[el.dataset.sel+'Sel'],id=+el.value;el.checked?S.add(id):S.delete(id);VIEWS[ui.tab][1]()}
+  else if(el.dataset.all){const sc=el.dataset.all,S=ui[sc+'Sel'];const list=sc==='inv'?filtInv():sc==='hist'?filtHist():filtTras();
+    list.forEach(x=>el.checked?S.add(x.id):S.delete(x.id));VIEWS[ui.tab][1]()}
+});
+document.addEventListener('keydown',ev=>{
+  if(ev.key!=='Escape')return;
+  if($('#ov-det').classList.contains('open'))closeModal('det');
+  else if(ui.drawer)closeDrawer();
+  else if($('#ov-form').classList.contains('open'))closeModal('form');
+});
+
+/* ================= init ================= */
+seed();drawSidebar();render();
+</script>
+</body>
+</html>
